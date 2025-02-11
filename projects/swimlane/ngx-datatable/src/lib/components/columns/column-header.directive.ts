@@ -1,6 +1,15 @@
-import { Directive, TemplateRef } from '@angular/core';
+import { Directive } from '@angular/core';
+import { HeaderCellContext } from '../../types/public.types';
 
-@Directive({ selector: '[ngx-datatable-header-template]' })
+@Directive({
+  selector: '[ngx-datatable-header-template]',
+  standalone: true
+})
 export class DataTableColumnHeaderDirective {
-  constructor(public template: TemplateRef<any>) {}
+  static ngTemplateContextGuard(
+    directive: DataTableColumnHeaderDirective,
+    context: unknown
+  ): context is HeaderCellContext {
+    return true;
+  }
 }

@@ -1,6 +1,12 @@
-import { Component, ViewEncapsulation, ViewChild } from '@angular/core';
-import { NgStyle } from '@angular/common';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Component, ViewChild } from '@angular/core';
+import { GroupedEmployee } from '../data.model';
+import {
+  ColumnMode,
+  DatatableComponent,
+  Group,
+  GroupToggleEvents,
+  SelectionType
+} from 'projects/swimlane/ngx-datatable/src/public-api';
 
 @Component({
   selector: 'row-grouping-demo',
@@ -29,11 +35,21 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         [rowHeight]="40"
         [limit]="4"
         [groupExpansionDefault]="true"
+        [selectionType]="SelectionType.checkbox"
       >
         <!-- Group Header Template -->
-        <ngx-datatable-group-header [rowHeight]="50" #myGroupHeader (toggle)="onDetailToggle($event)">
-          <ng-template let-group="group" let-expanded="expanded" ngx-datatable-group-header-template>
-            <div style="padding-left:5px;">
+        <ngx-datatable-group-header
+          [rowHeight]="34"
+          [checkboxable]="true"
+          #myGroupHeader
+          (toggle)="onDetailToggle($event)"
+        >
+          <ng-template
+            let-group="group"
+            let-expanded="expanded"
+            ngx-datatable-group-header-template
+          >
+            <div style="padding-left:5px;height: 100%; display:flex;align-items: center;">
               <a
                 href="#"
                 [class.datatable-icon-right]="!expanded"
@@ -41,14 +57,22 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
                 title="Expand/Collapse Group"
                 (click)="toggleExpandGroup(group)"
               >
-                <b>Age: {{ group.value[0].age }}</b>
+                <b>Age: {{ group ? group.value[0].age : '' }}</b>
               </a>
             </div>
           </ng-template>
         </ngx-datatable-group-header>
 
         <!-- Row Column Template -->
-        <ngx-datatable-column name="Exp. Pay." prop="" editable="true" frozenLeft="True">
+        <ngx-datatable-column
+          name="Exp. Pay."
+          prop=""
+          [headerCheckboxable]="true"
+          [checkboxable]="true"
+          editable="true"
+          [frozenLeft]="true"
+          [sortable]="false"
+        >
           <ng-template
             ngx-datatable-cell-template
             let-rowIndex="rowIndex"
@@ -92,7 +116,12 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
           </ng-template>
         </ngx-datatable-column>
 
-        <ngx-datatable-column name="Source" prop="source" editable="false" frozenLeft="True"></ngx-datatable-column>
+        <ngx-datatable-column
+          name="Source"
+          prop="source"
+          editable="false"
+          [frozenLeft]="true"
+        ></ngx-datatable-column>
         <ngx-datatable-column name="Name" prop="name" editable="true"></ngx-datatable-column>
         <ngx-datatable-column name="Gender" prop="gender"></ngx-datatable-column>
         <ngx-datatable-column name="Age" prop="age"></ngx-datatable-column>
@@ -106,7 +135,6 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
             let-rowHeight="rowHeight"
           >
             <input
-              autofocus
               (blur)="updateValue($event, 'comment', rowIndex)"
               type="text"
               name="comment"
@@ -116,20 +144,17 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         </ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class RowGroupingComponent {
-  @ViewChild('myTable') table: any;
+  @ViewChild('myTable') table: DatatableComponent<GroupedEmployee>;
 
-  funder = [];
-  calculated = [];
-  pending = [];
-  groups = [];
-
-  editing = {};
-  rows = [];
+  editing: Record<string, boolean> = {};
+  rows: GroupedEmployee[] = [];
 
   ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
 
   constructor() {
     this.fetch(data => {
@@ -146,17 +171,6 @@ export class RowGroupingComponent {
     };
 
     req.send();
-  }
-
-  getGroupRowHeight(group, rowHeight) {
-    let style = {};
-
-    style = {
-      height: group.length * 40 + 'px',
-      width: '100%'
-    };
-
-    return style;
   }
 
   checkGroup(event, row, rowIndex, group) {
@@ -182,13 +196,11 @@ export class RowGroupingComponent {
 
     if (group.length === 2) {
       // There are only 2 lines in a group
-      // tslint:disable-next-line:max-line-length
       if (
         ['Calculated', 'Funder'].indexOf(group[0].source) > -1 &&
         ['Calculated', 'Funder'].indexOf(group[1].source) > -1
       ) {
         // Sources are funder and calculated
-        // tslint:disable-next-line:max-line-length
         if (group[0].startdate === group[1].startdate && group[0].enddate === group[1].enddate) {
           // Start dates and end dates match
           for (let index = 0; index < group.length; index++) {
@@ -201,7 +213,11 @@ export class RowGroupingComponent {
               }
             }
 
-            if (group[index].exppayyes === 0 && group[index].exppayno === 0 && group[index].exppaypending === 0) {
+            if (
+              group[index].exppayyes === 0 &&
+              group[index].exppayno === 0 &&
+              group[index].exppaypending === 0
+            ) {
               expectedPaymentDealtWith = false;
             }
             console.log('expectedPaymentDealtWith', expectedPaymentDealtWith);
@@ -210,7 +226,11 @@ export class RowGroupingComponent {
       }
     } else {
       for (let index = 0; index < group.length; index++) {
-        if (group[index].exppayyes === 0 && group[index].exppayno === 0 && group[index].exppaypending === 0) {
+        if (
+          group[index].exppayyes === 0 &&
+          group[index].exppayno === 0 &&
+          group[index].exppaypending === 0
+        ) {
           expectedPaymentDealtWith = false;
         }
         console.log('expectedPaymentDealtWith', expectedPaymentDealtWith);
@@ -220,20 +240,24 @@ export class RowGroupingComponent {
     // check if there is a pending selected payment or a row that does not have any expected payment selected
     if (
       group.filter(rowFilter => rowFilter.exppaypending === 1).length === 0 &&
-      group.filter(rowFilter => rowFilter.exppaypending === 0 && rowFilter.exppayyes === 0 && rowFilter.exppayno === 0)
-        .length === 0
+      group.filter(
+        rowFilter =>
+          rowFilter.exppaypending === 0 && rowFilter.exppayyes === 0 && rowFilter.exppayno === 0
+      ).length === 0
     ) {
       console.log('expected payment dealt with');
 
       // check if can set the group status
       const numberOfExpPayYes = group.filter(rowFilter => rowFilter.exppayyes === 1).length;
-      const numberOfSourceFunder = group.filter(rowFilter => rowFilter.exppayyes === 1 && rowFilter.source === 'Funder')
-        .length;
+      const numberOfSourceFunder = group.filter(
+        rowFilter => rowFilter.exppayyes === 1 && rowFilter.source === 'Funder'
+      ).length;
       const numberOfSourceCalculated = group.filter(
         rowFilter => rowFilter.exppayyes === 1 && rowFilter.source === 'Calculated'
       ).length;
-      const numberOfSourceManual = group.filter(rowFilter => rowFilter.exppayyes === 1 && rowFilter.source === 'Manual')
-        .length;
+      const numberOfSourceManual = group.filter(
+        rowFilter => rowFilter.exppayyes === 1 && rowFilter.source === 'Manual'
+      ).length;
 
       console.log('numberOfExpPayYes', numberOfExpPayYes);
       console.log('numberOfSourceFunder', numberOfSourceFunder);
@@ -257,17 +281,18 @@ export class RowGroupingComponent {
   }
 
   updateValue(event, cell, rowIndex) {
+    const index = rowIndex.split('-')[1];
     this.editing[rowIndex + '-' + cell] = false;
-    this.rows[rowIndex][cell] = event.target.value;
+    this.rows[index][cell] = event.target.value;
     this.rows = [...this.rows];
   }
 
-  toggleExpandGroup(group) {
+  toggleExpandGroup(group: Group<GroupedEmployee>) {
     console.log('Toggled Expand Group!', group);
     this.table.groupHeader.toggleExpandGroup(group);
   }
 
-  onDetailToggle(event) {
+  onDetailToggle(event: GroupToggleEvents<GroupedEmployee>) {
     console.log('Detail Toggled', event);
   }
 }

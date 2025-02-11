@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { FullEmployee } from '../data.model';
 
 @Component({
   selector: 'tabs-demo',
@@ -45,7 +46,8 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
           </ngx-datatable>
         </div>
 
-        <div *ngIf="tab3">
+        @if (tab3) {
+        <div>
           <h4>ngIf Table</h4>
           <ngx-datatable
             class="material"
@@ -61,12 +63,14 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
             <ngx-datatable-column name="Age" [width]="80"></ngx-datatable-column>
           </ngx-datatable>
         </div>
+        }
       </div>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class TabsDemoComponent {
-  rows = [];
+  rows: FullEmployee[] = [];
 
   tab1 = true;
   tab2 = false;

@@ -1,4 +1,4 @@
-import { TestBed, ComponentFixture, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { numericIndexGetter } from '../../utils/column-prop-getters';
 import { setColumnDefaults } from '../../utils/column-helper';
@@ -8,24 +8,20 @@ import { DataTableBodyCellComponent } from './body-cell.component';
 describe('DataTableBodyCellComponent', () => {
   let fixture: ComponentFixture<DataTableBodyCellComponent>;
   let component: DataTableBodyCellComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [DataTableBodyCellComponent]
+      imports: [DataTableBodyCellComponent]
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(DataTableBodyCellComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(DataTableBodyCellComponent);
+      component = fixture.componentInstance;
+    });
+  }));
 
   describe('fixture', () => {
     it('should have a component instance', () => {

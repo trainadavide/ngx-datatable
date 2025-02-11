@@ -1,41 +1,40 @@
-import { TestBed, ComponentFixture, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { LongPressDirective } from './long-press.directive';
 
 @Component({
   selector: 'test-fixture-component',
-  template: ` <div long-press></div> `
+  template: ` <div long-press></div> `,
+  imports: [LongPressDirective]
 })
 class TestFixtureComponent {}
 
 describe('LongPressDirective', () => {
   let fixture: ComponentFixture<TestFixtureComponent>;
   let component: TestFixtureComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [LongPressDirective, TestFixtureComponent]
+      imports: [LongPressDirective, TestFixtureComponent]
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(TestFixtureComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(TestFixtureComponent);
+      component = fixture.componentInstance;
+    });
+  }));
 
   describe('fixture', () => {
     let directive: LongPressDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.directive(LongPressDirective)).injector.get(LongPressDirective);
+      directive = fixture.debugElement
+        .query(By.directive(LongPressDirective))
+        .injector.get(LongPressDirective);
     });
 
     it('should have a component instance', () => {

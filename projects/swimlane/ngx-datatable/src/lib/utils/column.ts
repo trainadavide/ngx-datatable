@@ -1,8 +1,11 @@
+import { TableColumn, TableColumnGroup } from '../types/table-column.type';
+import { ColumnGroupWidth, PinnedColumns } from '../types/internal.types';
+
 /**
  * Returns the columns by pin.
  */
-export function columnsByPin(cols: any[]) {
-  const ret: { left: any; center: any; right: any } = {
+export function columnsByPin(cols: TableColumn[]) {
+  const ret: TableColumnGroup = {
     left: [],
     center: [],
     right: []
@@ -26,7 +29,7 @@ export function columnsByPin(cols: any[]) {
 /**
  * Returns the widths of all group sets of a column
  */
-export function columnGroupWidths(groups: any, all: any) {
+export function columnGroupWidths(groups: TableColumnGroup, all: TableColumn[]): ColumnGroupWidth {
   return {
     left: columnTotalWidth(groups.left),
     center: columnTotalWidth(groups.center),
@@ -38,7 +41,7 @@ export function columnGroupWidths(groups: any, all: any) {
 /**
  * Calculates the total width of all columns and their groups
  */
-export function columnTotalWidth(columns: any[], prop?: string) {
+export function columnTotalWidth(columns: TableColumn[], prop?: string) {
   let totalWidth = 0;
 
   if (columns) {
@@ -55,7 +58,7 @@ export function columnTotalWidth(columns: any[], prop?: string) {
 /**
  * Calculates the total width of all columns and their groups
  */
-export function columnsTotalWidth(columns: any, prop?: any) {
+export function columnsTotalWidth(columns: TableColumn[], prop?: keyof TableColumn) {
   let totalWidth = 0;
 
   for (const column of columns) {
@@ -66,13 +69,11 @@ export function columnsTotalWidth(columns: any, prop?: any) {
   return totalWidth;
 }
 
-export function columnsByPinArr(val: any) {
-  const colsByPinArr = [];
+export function columnsByPinArr(val: TableColumn[]): PinnedColumns[] {
   const colsByPin = columnsByPin(val);
-
-  colsByPinArr.push({ type: 'left', columns: colsByPin['left'] });
-  colsByPinArr.push({ type: 'center', columns: colsByPin['center'] });
-  colsByPinArr.push({ type: 'right', columns: colsByPin['right'] });
-
-  return colsByPinArr;
+  return [
+    { type: 'left' as const, columns: colsByPin.left },
+    { type: 'center' as const, columns: colsByPin.center },
+    { type: 'right' as const, columns: colsByPin.right }
+  ];
 }

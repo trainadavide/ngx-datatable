@@ -1,10 +1,12 @@
 import { Component, Input, OnChanges, PipeTransform, TemplateRef } from '@angular/core';
+import { TableColumn, TableColumnProp } from '../../../types/table-column.type';
+import { DataTableBodyRowComponent } from '../body-row.component';
 
 export interface ISummaryColumn {
   summaryFunc?: (cells: any[]) => any;
   summaryTemplate?: TemplateRef<any>;
 
-  prop: string;
+  prop?: TableColumnProp;
   pipe?: PipeTransform;
 }
 
@@ -28,8 +30,8 @@ function noopSumFunc(cells: any[]): void {
 @Component({
   selector: 'datatable-summary-row',
   template: `
+    @if (summaryRow && _internalColumns) {
     <datatable-body-row
-      *ngIf="summaryRow && _internalColumns"
       tabindex="-1"
       [innerWidth]="innerWidth"
       [offsetX]="offsetX"
@@ -39,14 +41,16 @@ function noopSumFunc(cells: any[]): void {
       [rowIndex]="-1"
     >
     </datatable-body-row>
+    }
   `,
   host: {
     class: 'datatable-summary-row'
-  }
+  },
+  imports: [DataTableBodyRowComponent]
 })
 export class DataTableSummaryRowComponent implements OnChanges {
   @Input() rows: any[];
-  @Input() columns: ISummaryColumn[];
+  @Input() columns: TableColumn[];
 
   @Input() rowHeight: number;
   @Input() offsetX: number;

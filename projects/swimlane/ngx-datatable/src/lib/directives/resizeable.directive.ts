@@ -1,38 +1,38 @@
 import {
+  AfterViewInit,
+  booleanAttribute,
   Directive,
   ElementRef,
-  HostListener,
-  Input,
-  Output,
   EventEmitter,
+  HostBinding,
+  HostListener,
+  inject,
+  Input,
+  numberAttribute,
   OnDestroy,
-  AfterViewInit,
+  Output,
   Renderer2
 } from '@angular/core';
-import { Subscription, fromEvent } from 'rxjs';
+import { fromEvent, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Directive({
   selector: '[resizeable]',
-  host: {
-    '[class.resizeable]': 'resizeEnabled'
-  }
+  standalone: true
 })
 export class ResizeableDirective implements OnDestroy, AfterViewInit {
-  @Input() resizeEnabled: boolean = true;
-  @Input() minWidth: number;
-  @Input() maxWidth: number;
+  private renderer = inject(Renderer2);
+
+  @HostBinding('class.resizeable') @Input({ transform: booleanAttribute }) resizeEnabled = true;
+  @Input({ transform: numberAttribute }) minWidth: number;
+  @Input({ transform: numberAttribute }) maxWidth: number;
 
   @Output() resize: EventEmitter<any> = new EventEmitter();
+  @Output() resizing: EventEmitter<any> = new EventEmitter();
 
-  element: HTMLElement;
+  element = inject(ElementRef).nativeElement;
   subscription: Subscription;
-  resizing: boolean = false;
   private resizeHandle: HTMLElement;
-
-  constructor(element: ElementRef, private renderer: Renderer2) {
-    this.element = element.nativeElement;
-  }
 
   ngAfterViewInit(): void {
     const renderer2 = this.renderer;
@@ -55,8 +55,6 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
   }
 
   onMouseup(): void {
-    this.resizing = false;
-
     if (this.subscription && !this.subscription.closed) {
       this._destroySubscription();
       this.resize.emit(this.element.clientWidth);
@@ -65,13 +63,12 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
 
   @HostListener('mousedown', ['$event'])
   onMousedown(event: MouseEvent): void {
-    const isHandle = (<HTMLElement>event.target).classList.contains('resize-handle');
+    const isHandle = (event.target as HTMLElement).classList.contains('resize-handle');
     const initialWidth = this.element.clientWidth;
     const mouseDownScreenX = event.screenX;
 
     if (isHandle) {
       event.stopPropagation();
-      this.resizing = true;
 
       const mouseup = fromEvent(document, 'mouseup');
       this.subscription = mouseup.subscribe((ev: MouseEvent) => this.onMouseup());
@@ -87,13 +84,7 @@ export class ResizeableDirective implements OnDestroy, AfterViewInit {
   move(event: MouseEvent, initialWidth: number, mouseDownScreenX: number): void {
     const movementX = event.screenX - mouseDownScreenX;
     const newWidth = initialWidth + movementX;
-
-    const overMinWidth = !this.minWidth || newWidth >= this.minWidth;
-    const underMaxWidth = !this.maxWidth || newWidth <= this.maxWidth;
-
-    if (overMinWidth && underMaxWidth) {
-      this.element.style.width = `${newWidth}px`;
-    }
+    this.resizing.emit(newWidth);
   }
 
   private _destroySubscription() {

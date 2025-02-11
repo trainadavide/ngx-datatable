@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, TableColumn } from 'projects/swimlane/ngx-datatable/src/public-api';
 
 @Component({
   selector: 'multiple-tables-demo',
@@ -37,12 +37,13 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
       >
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class MultipleTablesComponent {
-  columns1 = [{ prop: 'name' }, { name: 'Gender' }, { name: 'Company' }];
+  columns1: TableColumn[] = [{ prop: 'name' }, { name: 'Gender' }, { name: 'Company' }];
 
-  columns2 = [{ prop: 'name', name: 'Name' }, { name: 'Gender' }];
+  columns2: TableColumn[] = [{ prop: 'name', name: 'Name' }, { name: 'Gender' }];
 
   rows1 = [
     { name: 'Larry', gender: 'Male', company: 'Cisco' },

@@ -1,37 +1,40 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { PagerPageEvent } from '../../types/public.types';
+import { Page } from '../../types/internal.types';
 
 @Component({
   selector: 'datatable-pager',
   template: `
     <ul class="pager">
       <li [class.disabled]="!canPrevious()">
-        <a role="button" aria-label="go to first page" href="javascript:void(0)" (click)="selectPage(1)">
+        <a role="button" aria-label="go to first page" (click)="selectPage(1)">
           <i class="{{ pagerPreviousIcon }}"></i>
         </a>
       </li>
       <li [class.disabled]="!canPrevious()">
-        <a role="button" aria-label="go to previous page" href="javascript:void(0)" (click)="prevPage()">
+        <a role="button" aria-label="go to previous page" (click)="prevPage()">
           <i class="{{ pagerLeftArrowIcon }}"></i>
         </a>
       </li>
+      @for (pg of pages; track pg.number) {
       <li
         role="button"
         [attr.aria-label]="'page ' + pg.number"
         class="pages"
-        *ngFor="let pg of pages"
         [class.active]="pg.number === page"
       >
-        <a href="javascript:void(0)" (click)="selectPage(pg.number)">
+        <a (click)="selectPage(pg.number)">
           {{ pg.text }}
         </a>
       </li>
+      }
       <li [class.disabled]="!canNext()">
-        <a role="button" aria-label="go to next page" href="javascript:void(0)" (click)="nextPage()">
+        <a role="button" aria-label="go to next page" (click)="nextPage()">
           <i class="{{ pagerRightArrowIcon }}"></i>
         </a>
       </li>
       <li [class.disabled]="!canNext()">
-        <a role="button" aria-label="go to last page" href="javascript:void(0)" (click)="selectPage(totalPages)">
+        <a role="button" aria-label="go to last page" (click)="selectPage(totalPages)">
           <i class="{{ pagerNextIcon }}"></i>
         </a>
       </li>
@@ -40,7 +43,8 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
   host: {
     class: 'datatable-pager'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DataTablePagerComponent {
   @Input() pagerLeftArrowIcon: string;
@@ -83,12 +87,12 @@ export class DataTablePagerComponent {
     return Math.max(count || 0, 1);
   }
 
-  @Output() change: EventEmitter<any> = new EventEmitter();
+  @Output() change: EventEmitter<PagerPageEvent> = new EventEmitter();
 
-  _count: number = 0;
-  _page: number = 1;
-  _size: number = 0;
-  pages: any;
+  _count = 0;
+  _page = 1;
+  _size = 0;
+  pages: Page[];
 
   canPrevious(): boolean {
     return this.page > 1;
@@ -116,8 +120,8 @@ export class DataTablePagerComponent {
     }
   }
 
-  calcPages(page?: number): any[] {
-    const pages = [];
+  calcPages(page?: number): Page[] {
+    const pages: Page[] = [];
     let startPage = 1;
     let endPage = this.totalPages;
     const maxSize = 5;

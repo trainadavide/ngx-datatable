@@ -1,9 +1,10 @@
+import { TableColumn, TableColumnGroup } from '../types/table-column.type';
 import { columnsByPin, columnsTotalWidth } from './column';
 
 /**
  * Calculates the Total Flex Grow
  */
-export function getTotalFlexGrow(columns: any[]) {
+export function getTotalFlexGrow(columns: TableColumn[]) {
   let totalFlexGrow = 0;
 
   for (const c of columns) {
@@ -17,7 +18,7 @@ export function getTotalFlexGrow(columns: any[]) {
  * Adjusts the column widths.
  * Inspired by: https://github.com/facebook/fixed-data-table/blob/master/src/FixedDataTableWidthHelper.js
  */
-export function adjustColumnWidths(allColumns: any, expectedWidth: any) {
+export function adjustColumnWidths(allColumns: TableColumn[], expectedWidth: number) {
   const columnsWidth = columnsTotalWidth(allColumns);
   const totalFlexGrow = getTotalFlexGrow(allColumns);
   const colsByGroup = columnsByPin(allColumns);
@@ -30,15 +31,21 @@ export function adjustColumnWidths(allColumns: any, expectedWidth: any) {
 /**
  * Resizes columns based on the flexGrow property, while respecting manually set widths
  */
-function scaleColumns(colsByGroup: any, maxWidth: any, totalFlexGrow: any) {
-  // calculate total width and flexgrow points for coulumns that can be resized
+function scaleColumns(colsByGroup: TableColumnGroup, maxWidth: number, totalFlexGrow: number) {
+  // calculate total width and flexgrow points for columns that can be resized
   for (const attr in colsByGroup) {
-    for (const column of colsByGroup[attr]) {
-      if (!column.canAutoResize) {
-        maxWidth -= column.width;
-        totalFlexGrow -= column.flexGrow ? column.flexGrow : 0;
-      } else {
-        column.width = 0;
+    if (attr in colsByGroup) {
+      for (const column of colsByGroup[attr]) {
+        if (column.$$oldWidth) {
+          // when manually resized, switch off auto-resize
+          column.canAutoResize = false;
+        }
+        if (!column.canAutoResize) {
+          maxWidth -= column.width;
+          totalFlexGrow -= column.flexGrow ? column.flexGrow : 0;
+        } else {
+          column.width = 0;
+        }
       }
     }
   }
@@ -52,21 +59,47 @@ function scaleColumns(colsByGroup: any, maxWidth: any, totalFlexGrow: any) {
     remainingWidth = 0;
 
     for (const attr in colsByGroup) {
-      for (const column of colsByGroup[attr]) {
-        // if the column can be resize and it hasn't reached its minimum width yet
-        if (column.canAutoResize && !hasMinWidth[column.prop]) {
-          const newWidth = column.width + column.flexGrow * widthPerFlexPoint;
-          if (column.minWidth !== undefined && newWidth < column.minWidth) {
-            remainingWidth += newWidth - column.minWidth;
-            column.width = column.minWidth;
-            hasMinWidth[column.prop] = true;
-          } else {
-            column.width = newWidth;
+      if (attr in colsByGroup) {
+        for (const column of colsByGroup[attr]) {
+          // if the column can be resize and it hasn't reached its minimum width yet
+          if (column.canAutoResize && !hasMinWidth[column.prop]) {
+            const newWidth = column.width + column.flexGrow * widthPerFlexPoint;
+            if (column.minWidth !== undefined && newWidth < column.minWidth) {
+              remainingWidth += newWidth - column.minWidth;
+              column.width = column.minWidth;
+              hasMinWidth[column.prop] = true;
+            } else {
+              column.width = newWidth;
+            }
           }
         }
       }
     }
   } while (remainingWidth !== 0);
+
+  // Adjust for any remaining offset in computed widths vs maxWidth
+  const columns: TableColumn[] = Object.values(colsByGroup).reduce(
+    (acc, col) => acc.concat(col),
+    []
+  );
+
+  const totalWidthAchieved = columns.reduce((acc, col) => acc + col.width, 0);
+  const delta = maxWidth - totalWidthAchieved;
+
+  if (delta === 0) {
+    return;
+  }
+
+  // adjust the first column that can be auto-resized respecting the min/max widths
+  for (const col of columns.filter(c => c.canAutoResize).sort((a, b) => a.width - b.width)) {
+    if (
+      (delta > 0 && (!col.maxWidth || col.width + delta <= col.maxWidth)) ||
+      (delta < 0 && (!col.minWidth || col.width + delta >= col.minWidth))
+    ) {
+      col.width += delta;
+      break;
+    }
+  }
 }
 
 /**
@@ -89,15 +122,16 @@ function scaleColumns(colsByGroup: any, maxWidth: any, totalFlexGrow: any) {
  *    the width should use the original width; not the newly proportioned widths.
  */
 export function forceFillColumnWidths(
-  allColumns: any[],
+  allColumns: TableColumn[],
   expectedWidth: number,
   startIdx: number,
   allowBleed: boolean,
-  defaultColWidth: number = 300
+  defaultColWidth: number = 150,
+  verticalScrollWidth = 0
 ) {
-  const columnsToResize = allColumns.slice(startIdx + 1, allColumns.length).filter(c => {
-    return c.canAutoResize !== false;
-  });
+  const columnsToResize = allColumns
+    .slice(startIdx + 1, allColumns.length)
+    .filter(c => c.canAutoResize !== false);
 
   for (const column of columnsToResize) {
     if (!column.$$oldWidth) {
@@ -109,6 +143,7 @@ export function forceFillColumnWidths(
   let exceedsWindow = false;
   let contentWidth = getContentWidth(allColumns, defaultColWidth);
   let remainingWidth = expectedWidth - contentWidth;
+  const initialRemainingWidth = remainingWidth;
   const columnsProcessed: any[] = [];
   const remainingWidthLimit = 1; // when to stop
 
@@ -118,7 +153,8 @@ export function forceFillColumnWidths(
     exceedsWindow = contentWidth >= expectedWidth;
 
     for (const column of columnsToResize) {
-      if (exceedsWindow && allowBleed) {
+      // don't bleed if the initialRemainingWidth is same as verticalScrollWidth
+      if (exceedsWindow && allowBleed && initialRemainingWidth !== -1 * verticalScrollWidth) {
         column.width = column.$$oldWidth || column.width || defaultColWidth;
       } else {
         const newSize = (column.width || defaultColWidth) + additionWidthPerColumn;
@@ -137,16 +173,21 @@ export function forceFillColumnWidths(
       column.width = Math.max(0, column.width);
     }
 
-    contentWidth = getContentWidth(allColumns);
+    contentWidth = getContentWidth(allColumns, defaultColWidth);
     remainingWidth = expectedWidth - contentWidth;
     removeProcessedColumns(columnsToResize, columnsProcessed);
   } while (remainingWidth > remainingWidthLimit && columnsToResize.length !== 0);
+
+  // reset so we don't have stale values
+  for (const column of columnsToResize) {
+    column.$$oldWidth = 0;
+  }
 }
 
 /**
  * Remove the processed columns from the current active columns.
  */
-function removeProcessedColumns(columnsToResize: any[], columnsProcessed: any[]) {
+function removeProcessedColumns(columnsToResize: TableColumn[], columnsProcessed: TableColumn[]) {
   for (const column of columnsProcessed) {
     const index = columnsToResize.indexOf(column);
     columnsToResize.splice(index, 1);
@@ -156,7 +197,7 @@ function removeProcessedColumns(columnsToResize: any[], columnsProcessed: any[])
 /**
  * Gets the width of the columns
  */
-function getContentWidth(allColumns: any, defaultColWidth: number = 300): number {
+function getContentWidth(allColumns: TableColumn[], defaultColWidth: number = 150): number {
   let contentWidth = 0;
 
   for (const column of allColumns) {

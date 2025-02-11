@@ -1,5 +1,8 @@
-import { Component, Output, EventEmitter, ChangeDetectionStrategy, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { DatatableFooterDirective } from './footer.directive';
+import { PagerPageEvent } from '../../types/public.types';
+import { DataTablePagerComponent } from './pager.component';
+import { NgClass, NgTemplateOutlet } from '@angular/common';
 @Component({
   selector: 'datatable-footer',
   template: `
@@ -8,8 +11,8 @@ import { DatatableFooterDirective } from './footer.directive';
       [ngClass]="{ 'selected-count': selectedMessage }"
       [style.height.px]="footerHeight"
     >
+      @if (footerTemplate) {
       <ng-template
-        *ngIf="footerTemplate"
         [ngTemplateOutlet]="footerTemplate.template"
         [ngTemplateOutletContext]="{
           rowCount: rowCount,
@@ -20,12 +23,14 @@ import { DatatableFooterDirective } from './footer.directive';
         }"
       >
       </ng-template>
-      <div class="page-count" *ngIf="!footerTemplate">
-        <span *ngIf="selectedMessage"> {{ selectedCount?.toLocaleString() }} {{ selectedMessage }} / </span>
+      } @else {
+      <div class="page-count">
+        @if (selectedMessage) {
+        <span> {{ selectedCount?.toLocaleString() }} {{ selectedMessage }} / </span>
+        }
         {{ rowCount?.toLocaleString() }} {{ totalMessage }}
       </div>
       <datatable-pager
-        *ngIf="!footerTemplate"
         [pagerLeftArrowIcon]="pagerLeftArrowIcon"
         [pagerRightArrowIcon]="pagerRightArrowIcon"
         [pagerPreviousIcon]="pagerPreviousIcon"
@@ -37,12 +42,14 @@ import { DatatableFooterDirective } from './footer.directive';
         (change)="page.emit($event)"
       >
       </datatable-pager>
+      }
     </div>
   `,
   host: {
     class: 'datatable-footer'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgClass, NgTemplateOutlet, DataTablePagerComponent]
 })
 export class DataTableFooterComponent {
   @Input() footerHeight: number;
@@ -59,7 +66,7 @@ export class DataTableFooterComponent {
   @Input() selectedCount: number = 0;
   @Input() selectedMessage: string | boolean;
 
-  @Output() page: EventEmitter<any> = new EventEmitter();
+  @Output() page: EventEmitter<PagerPageEvent> = new EventEmitter();
 
   get isVisible(): boolean {
     return this.rowCount / this.pageSize > 1;

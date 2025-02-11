@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/public-api';
+import {
+  ColumnMode,
+  SelectionType,
+  TableColumn
+} from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'multidisable-selection-demo',
@@ -38,21 +43,25 @@ import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/p
       <div class="selected-column">
         <h4>Selections</h4>
         <ul>
-          <li *ngFor="let sel of selected">
+          @for (sel of selected; track sel) {
+          <li>
             {{ sel.name }}
           </li>
-          <li *ngIf="!selected.length">No Selections</li>
+          } @if (!selected.length) {
+          <li>No Selections</li>
+          }
         </ul>
       </div>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class MultiDisableSelectionComponent {
-  rows = [];
+  rows: Employee[] = [];
 
-  selected = [];
+  selected: Employee[] = [];
 
-  columns: any[] = [{ prop: 'name' }, { name: 'Company' }, { name: 'Gender' }];
+  columns: TableColumn[] = [{ prop: 'name' }, { name: 'Company' }, { name: 'Gender' }];
 
   ColumnMode = ColumnMode;
   SelectionType = SelectionType;

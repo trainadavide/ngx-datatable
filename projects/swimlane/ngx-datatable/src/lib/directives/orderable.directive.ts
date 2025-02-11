@@ -1,32 +1,48 @@
 import {
-  Directive,
-  Output,
-  EventEmitter,
-  ContentChildren,
-  QueryList,
-  KeyValueDiffers,
   AfterContentInit,
+  ContentChildren,
+  Directive,
+  EventEmitter,
+  inject,
+  KeyValueChangeRecord,
+  KeyValueDiffer,
+  KeyValueDiffers,
   OnDestroy,
-  Inject
+  Output,
+  QueryList
 } from '@angular/core';
 import { DraggableDirective } from './draggable.directive';
 import { DOCUMENT } from '@angular/common';
+import { TableColumn } from '../types/table-column.type';
+import {
+  DraggableDragEvent,
+  OrderableReorderEvent,
+  TargetChangedEvent
+} from '../types/internal.types';
 
-@Directive({ selector: '[orderable]' })
+interface OrderPosition {
+  left: number;
+  right: number;
+  index: number;
+  element: HTMLElement;
+}
+
+@Directive({
+  selector: '[orderable]',
+  standalone: true
+})
 export class OrderableDirective implements AfterContentInit, OnDestroy {
-  @Output() reorder: EventEmitter<any> = new EventEmitter();
-  @Output() targetChanged: EventEmitter<any> = new EventEmitter();
+  private document = inject(DOCUMENT);
+
+  @Output() reorder: EventEmitter<OrderableReorderEvent> = new EventEmitter();
+  @Output() targetChanged: EventEmitter<TargetChangedEvent> = new EventEmitter();
 
   @ContentChildren(DraggableDirective, { descendants: true })
   draggables: QueryList<DraggableDirective>;
 
-  positions: any;
-  differ: any;
+  positions: Record<string, OrderPosition>;
+  differ: KeyValueDiffer<string, DraggableDirective> = inject(KeyValueDiffers).find({}).create();
   lastDraggingIndex: number;
-
-  constructor(differs: KeyValueDiffers, @Inject(DOCUMENT) private document: any) {
-    this.differ = differs.find({}).create();
-  }
 
   ngAfterContentInit(): void {
     // HACK: Investigate Better Way
@@ -46,8 +62,9 @@ export class OrderableDirective implements AfterContentInit, OnDestroy {
     const diffs = this.differ.diff(this.createMapDiffs());
 
     if (diffs) {
-      const subscribe = ({ currentValue, previousValue }: any) => {
-        unsubscribe({ previousValue });
+      const subscribe = (record: KeyValueChangeRecord<string, DraggableDirective>) => {
+        unsubscribe(record);
+        const { currentValue } = record;
 
         if (currentValue) {
           currentValue.dragStart.subscribe(this.onDragStart.bind(this));
@@ -56,7 +73,7 @@ export class OrderableDirective implements AfterContentInit, OnDestroy {
         }
       };
 
-      const unsubscribe = ({ previousValue }: any) => {
+      const unsubscribe = ({ previousValue }: KeyValueChangeRecord<string, DraggableDirective>) => {
         if (previousValue) {
           previousValue.dragStart.unsubscribe();
           previousValue.dragging.unsubscribe();
@@ -77,7 +94,7 @@ export class OrderableDirective implements AfterContentInit, OnDestroy {
     for (const dragger of this.draggables.toArray()) {
       const elm = dragger.element;
       const left = parseInt(elm.offsetLeft.toString(), 0);
-      this.positions[dragger.dragModel.prop] = {
+      this.positions[dragger.dragModel.$$id] = {
         left,
         right: left + parseInt(elm.offsetWidth.toString(), 0),
         index: i++,
@@ -86,8 +103,8 @@ export class OrderableDirective implements AfterContentInit, OnDestroy {
     }
   }
 
-  onDragging({ element, model, event }: any): void {
-    const prevPos = this.positions[model.prop];
+  onDragging({ element, model, event }: DraggableDragEvent): void {
+    const prevPos = this.positions[model.$$id];
     const target = this.isTarget(model, event);
 
     if (target) {
@@ -108,8 +125,8 @@ export class OrderableDirective implements AfterContentInit, OnDestroy {
     }
   }
 
-  onDragEnd({ element, model, event }: any): void {
-    const prevPos = this.positions[model.prop];
+  onDragEnd({ element, model, event }: DraggableDragEvent): void {
+    const prevPos = this.positions[model.$$id];
 
     const target = this.isTarget(model, event);
     if (target) {
@@ -124,18 +141,18 @@ export class OrderableDirective implements AfterContentInit, OnDestroy {
     element.style.left = 'auto';
   }
 
-  isTarget(model: any, event: any): any {
+  isTarget(model: TableColumn, event: MouseEvent) {
     let i = 0;
     const x = event.x || event.clientX;
     const y = event.y || event.clientY;
     const targets = this.document.elementsFromPoint(x, y);
 
-    for (const prop in this.positions) {
+    for (const id in this.positions) {
       // current column position which throws event.
-      const pos = this.positions[prop];
+      const pos = this.positions[id];
 
       // since we drag the inner span, we need to find it in the elements at the cursor
-      if (model.prop !== prop && targets.find((el: any) => el === pos.element)) {
+      if (model.$$id !== id && targets.find((el: any) => el === pos.element)) {
         return {
           pos,
           i

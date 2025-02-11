@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'inline-edit-demo',
@@ -27,34 +28,34 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         [rows]="rows"
       >
         <ngx-datatable-column name="Name">
-          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-            <span
-              title="Double click to edit"
-              (dblclick)="editing[rowIndex + '-name'] = true"
-              *ngIf="!editing[rowIndex + '-name']"
-            >
+          <ng-template
+            ngx-datatable-cell-template
+            let-rowIndex="rowIndex"
+            let-value="value"
+            let-row="row"
+          >
+            @if (editing[rowIndex + '-name']) {
+            <input (blur)="updateValue($event, 'name', rowIndex)" type="text" [value]="value" />
+            } @else {
+            <span title="Double click to edit" (dblclick)="editing[rowIndex + '-name'] = true">
               {{ value }}
             </span>
-            <input
-              autofocus
-              (blur)="updateValue($event, 'name', rowIndex)"
-              *ngIf="editing[rowIndex + '-name']"
-              type="text"
-              [value]="value"
-            />
+            }
           </ng-template>
         </ngx-datatable-column>
         <ngx-datatable-column name="Gender">
-          <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row" let-value="value">
-            <span
-              title="Double click to edit"
-              (dblclick)="editing[rowIndex + '-gender'] = true"
-              *ngIf="!editing[rowIndex + '-gender']"
-            >
+          <ng-template
+            ngx-datatable-cell-template
+            let-rowIndex="rowIndex"
+            let-row="row"
+            let-value="value"
+          >
+            @if (!editing[rowIndex + '-gender']) {
+            <span title="Double click to edit" (dblclick)="editing[rowIndex + '-gender'] = true">
               {{ value }}
             </span>
+            } @if (editing[rowIndex + '-gender']) {
             <select
-              *ngIf="editing[rowIndex + '-gender']"
               (blur)="editing[rowIndex + '-gender'] = false"
               (change)="updateValue($event, 'gender', rowIndex)"
               [value]="value"
@@ -62,6 +63,7 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
+            }
           </ng-template>
         </ngx-datatable-column>
         <ngx-datatable-column name="Age">
@@ -71,11 +73,12 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         </ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class InlineEditComponent {
   editing = {};
-  rows = [];
+  rows: Employee[] = [];
 
   ColumnMode = ColumnMode;
 
@@ -96,7 +99,7 @@ export class InlineEditComponent {
     req.send();
   }
 
-  updateValue(event, cell, rowIndex) {
+  updateValue(event, cell, rowIndex: number) {
     console.log('inline editing rowIndex', rowIndex);
     this.editing[rowIndex + '-' + cell] = false;
     this.rows[rowIndex][cell] = event.target.value;

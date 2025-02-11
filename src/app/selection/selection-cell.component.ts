@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/public-api';
+import {
+  ColumnMode,
+  SelectionType,
+  TableColumn
+} from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'cell-selection-demo',
@@ -31,12 +36,13 @@ import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/p
       >
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class CellSelectionComponent {
-  rows: any[] = [];
-  selected: any[] = [];
-  columns: any[] = [{ prop: 'name' }, { name: 'Company' }, { name: 'Gender' }];
+  rows: Employee[] = [];
+  selected: Employee[] = [];
+  columns: TableColumn[] = [{ prop: 'name' }, { name: 'Company' }, { name: 'Gender' }];
 
   ColumnMode = ColumnMode;
   SelectionType = SelectionType;

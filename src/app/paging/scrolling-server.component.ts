@@ -1,10 +1,11 @@
 import { Component, ElementRef, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
-import { CorporateEmployee } from './model/corporate-employee';
 
 import data from 'src/assets/data/company.json';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
+
 const companyData = data as any[];
 
 class PagedData<T> {
@@ -16,7 +17,7 @@ class PagedData<T> {
  */
 @Injectable()
 export class MockServerResultsService {
-  public getResults(offset: number, limit: number): Observable<PagedData<CorporateEmployee>> {
+  public getResults(offset: number, limit: number): Observable<PagedData<Employee>> {
     return of(companyData.slice(offset, offset + limit)).pipe(
       delay(new Date(Date.now() + 500)),
       map(d => ({ data: d }))
@@ -48,19 +49,21 @@ export class MockServerResultsService {
         [headerHeight]="headerHeight"
         [rowHeight]="rowHeight"
         [loadingIndicator]="isLoading"
+        [ghostLoadingIndicator]="isLoading"
         [scrollbarV]="true"
         (scroll)="onScroll($event.offsetY)"
       ></ngx-datatable>
     </div>
   `,
-  styleUrls: ['./scrolling-server.component.css']
+  styleUrls: ['./scrolling-server.component.css'],
+  standalone: false
 })
 export class ServerScrollingComponent {
   readonly headerHeight = 50;
   readonly rowHeight = 50;
   readonly pageLimit = 10;
 
-  rows: CorporateEmployee[] = [];
+  rows: Employee[] = [];
   isLoading: boolean;
 
   ColumnMode = ColumnMode;

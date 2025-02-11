@@ -5,24 +5,20 @@ import { DataTablePagerComponent } from './pager.component';
 describe('DataTablePagerComponent', () => {
   let fixture;
   let pager: DataTablePagerComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() =>
     TestBed.configureTestingModule({
-      declarations: [DataTablePagerComponent]
+      imports: [DataTablePagerComponent]
     })
   );
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents();
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents();
 
-      fixture = TestBed.createComponent(DataTablePagerComponent);
-      pager = fixture.componentInstance;
-      element = fixture.nativeElement;
-    })
-  );
+    fixture = TestBed.createComponent(DataTablePagerComponent);
+    pager = fixture.componentInstance;
+  }));
 
   describe('size', () => {
     it('should be defined', () => {

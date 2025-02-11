@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/public-api';
+import {
+  ColumnMode,
+  SelectionType,
+  TableColumn
+} from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'multi-selection-demo',
@@ -18,7 +23,10 @@ import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/p
       </h3>
       <div style="float:left;width:75%">
         <div class="info">
-          <p>This demonstrates multi selection table, use CTRL or SHIFT click to select multiple items.</p>
+          <p
+            >This demonstrates multi selection table, use CTRL or SHIFT click to select multiple
+            items.</p
+          >
         </div>
 
         <ngx-datatable
@@ -41,21 +49,25 @@ import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/p
       <div class="selected-column">
         <h4>Selections</h4>
         <ul>
-          <li *ngFor="let sel of selected">
+          @for (sel of selected; track sel) {
+          <li>
             {{ sel.name }}
           </li>
-          <li *ngIf="!selected.length">No Selections</li>
+          } @if (!selected.length) {
+          <li>No Selections</li>
+          }
         </ul>
       </div>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class MultiSelectionComponent {
-  rows = [];
+  rows: Employee[] = [];
 
-  selected = [];
+  selected: Employee[] = [];
 
-  columns: any[] = [{ prop: 'name' }, { name: 'Company' }, { name: 'Gender' }];
+  columns: TableColumn[] = [{ prop: 'name' }, { name: 'Company' }, { name: 'Gender' }];
 
   ColumnMode = ColumnMode;
   SelectionType = SelectionType;

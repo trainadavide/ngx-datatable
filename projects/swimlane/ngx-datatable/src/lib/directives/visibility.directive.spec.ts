@@ -1,4 +1,4 @@
-import { TestBed, ComponentFixture, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { VisibilityDirective } from './visibility.directive';
@@ -13,37 +13,36 @@ import { VisibilityDirective } from './visibility.directive';
       }
     `
   ],
-  template: ` <div visibilityObserver></div> `
+  template: ` <div visibilityObserver></div> `,
+  imports: [VisibilityDirective]
 })
 class TestFixtureComponent {}
 
 describe('VisibilityDirective', () => {
   let fixture: ComponentFixture<TestFixtureComponent>;
   let component: TestFixtureComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [VisibilityDirective, TestFixtureComponent]
+      imports: [VisibilityDirective, TestFixtureComponent]
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(TestFixtureComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(TestFixtureComponent);
+      component = fixture.componentInstance;
+    });
+  }));
 
   describe('fixture', () => {
     let directive: VisibilityDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.directive(VisibilityDirective)).injector.get(VisibilityDirective);
+      directive = fixture.debugElement
+        .query(By.directive(VisibilityDirective))
+        .injector.get(VisibilityDirective);
     });
 
     it('should have a component instance', () => {

@@ -1,46 +1,44 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
-import { SelectionType } from '../../types/selection.type';
-import { selectRowsBetween, selectRows } from '../../utils/selection';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { selectRows, selectRowsBetween } from '../../utils/selection';
 import { Keys } from '../../utils/keys';
-
-export interface Model {
-  type: string;
-  event: MouseEvent | KeyboardEvent;
-  row: any;
-  rowElement: any;
-  cellElement: any;
-  cellIndex: number;
-}
+import { ActivateEvent, SelectionType } from '../../types/public.types';
 
 @Component({
   selector: 'datatable-selection',
   template: ` <ng-content></ng-content> `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DataTableSelectionComponent {
-  @Input() rows: any[];
-  @Input() selected: any[];
+export class DataTableSelectionComponent<TRow = any> {
+  @Input() rows: TRow[];
+  @Input() selected: TRow[];
   @Input() selectEnabled: boolean;
   @Input() selectionType: SelectionType;
   @Input() rowIdentity: any;
-  @Input() selectCheck: any;
+  @Input() selectCheck: (value: TRow, index: number, array: TRow[]) => boolean;
+  @Input() disableCheck: (row: TRow) => boolean;
 
-  @Output() activate: EventEmitter<any> = new EventEmitter();
-  @Output() select: EventEmitter<any> = new EventEmitter();
+  @Output() activate: EventEmitter<ActivateEvent<TRow>> = new EventEmitter();
+  @Output() select: EventEmitter<{ selected: TRow[] }> = new EventEmitter();
 
   prevIndex: number;
 
-  selectRow(event: KeyboardEvent | MouseEvent, index: number, row: any): void {
-    if (!this.selectEnabled) return;
+  selectRow(event: KeyboardEvent | MouseEvent, index: number, row: TRow): void {
+    if (!this.selectEnabled) {
+      return;
+    }
 
     const chkbox = this.selectionType === SelectionType.checkbox;
     const multi = this.selectionType === SelectionType.multi;
     const multiClick = this.selectionType === SelectionType.multiClick;
-    let selected: any[] = [];
+    let selected: TRow[] = [];
 
     if (multi || chkbox || multiClick) {
       if (event.shiftKey) {
-        selected = selectRowsBetween([], this.rows, index, this.prevIndex, this.getRowSelectedIdx.bind(this));
+        selected = selectRowsBetween([], this.rows, index, this.prevIndex);
+      } else if ((event as KeyboardEvent).key === 'a' && (event.ctrlKey || event.metaKey)) {
+        // select all rows except dummy rows which are added for ghostloader in case of virtual scroll
+        selected = this.rows.filter(rowItem => !!rowItem);
       } else if (event.ctrlKey || event.metaKey || multiClick || chkbox) {
         selected = selectRows([...this.selected], row, this.getRowSelectedIdx.bind(this));
       } else {
@@ -54,6 +52,10 @@ export class DataTableSelectionComponent {
       selected = selected.filter(this.selectCheck.bind(this));
     }
 
+    if (typeof this.disableCheck === 'function') {
+      selected = selected.filter(rowData => !this.disableCheck(rowData));
+    }
+
     this.selected.splice(0, this.selected.length);
     this.selected.push(...selected);
 
@@ -64,16 +66,19 @@ export class DataTableSelectionComponent {
     });
   }
 
-  onActivate(model: Model, index: number): void {
+  onActivate(model: ActivateEvent<TRow>, index: number): void {
     const { type, event, row } = model;
     const chkbox = this.selectionType === SelectionType.checkbox;
-    const select = (!chkbox && (type === 'click' || type === 'dblclick')) || (chkbox && type === 'checkbox');
+    const select =
+      (!chkbox && (type === 'click' || type === 'dblclick')) || (chkbox && type === 'checkbox');
 
     if (select) {
       this.selectRow(event, index, row);
     } else if (type === 'keydown') {
-      if ((<KeyboardEvent>event).keyCode === Keys.return) {
+      if ((event as KeyboardEvent).key === Keys.return) {
         this.selectRow(event, index, row);
+      } else if ((event as KeyboardEvent).key === 'a' && (event.ctrlKey || event.metaKey)) {
+        this.selectRow(event, 0, this.rows[this.rows.length - 1]);
       } else {
         this.onKeyboardFocus(model);
       }
@@ -81,34 +86,42 @@ export class DataTableSelectionComponent {
     this.activate.emit(model);
   }
 
-  onKeyboardFocus(model: Model): void {
-    const { keyCode } = <KeyboardEvent>model.event;
-    const shouldFocus = keyCode === Keys.up || keyCode === Keys.down || keyCode === Keys.right || keyCode === Keys.left;
+  onKeyboardFocus(model: ActivateEvent<TRow>): void {
+    const { key } = model.event as KeyboardEvent;
+    const shouldFocus =
+      key === Keys.up || key === Keys.down || key === Keys.right || key === Keys.left;
 
     if (shouldFocus) {
       const isCellSelection = this.selectionType === SelectionType.cell;
-
+      if (typeof this.disableCheck === 'function') {
+        const isRowDisabled = this.disableCheck(model.row);
+        if (isRowDisabled) {
+          return;
+        }
+      }
       if (!model.cellElement || !isCellSelection) {
-        this.focusRow(model.rowElement, keyCode);
+        this.focusRow(model.rowElement, key);
       } else if (isCellSelection) {
-        this.focusCell(model.cellElement, model.rowElement, keyCode, model.cellIndex);
+        this.focusCell(model.cellElement, model.rowElement, key, model.cellIndex);
       }
     }
   }
 
-  focusRow(rowElement: any, keyCode: number): void {
-    const nextRowElement = this.getPrevNextRow(rowElement, keyCode);
-    if (nextRowElement) nextRowElement.focus();
+  focusRow(rowElement: HTMLElement, key: Keys): void {
+    const nextRowElement = this.getPrevNextRow(rowElement, key);
+    if (nextRowElement) {
+      nextRowElement.focus();
+    }
   }
 
-  getPrevNextRow(rowElement: any, keyCode: number): any {
+  getPrevNextRow(rowElement: HTMLElement, key: Keys): any {
     const parentElement = rowElement.parentElement;
 
     if (parentElement) {
-      let focusElement: HTMLElement;
-      if (keyCode === Keys.up) {
+      let focusElement: Element;
+      if (key === Keys.up) {
         focusElement = parentElement.previousElementSibling;
-      } else if (keyCode === Keys.down) {
+      } else if (key === Keys.down) {
         focusElement = parentElement.nextElementSibling;
       }
 
@@ -118,30 +131,40 @@ export class DataTableSelectionComponent {
     }
   }
 
-  focusCell(cellElement: any, rowElement: any, keyCode: number, cellIndex: number): void {
-    let nextCellElement: HTMLElement;
+  focusCell(cellElement: HTMLElement, rowElement: HTMLElement, key: Keys, cellIndex: number): void {
+    let nextCellElement: Element;
 
-    if (keyCode === Keys.left) {
+    if (key === Keys.left) {
       nextCellElement = cellElement.previousElementSibling;
-    } else if (keyCode === Keys.right) {
+    } else if (key === Keys.right) {
       nextCellElement = cellElement.nextElementSibling;
-    } else if (keyCode === Keys.up || keyCode === Keys.down) {
-      const nextRowElement = this.getPrevNextRow(rowElement, keyCode);
+    } else if (key === Keys.up || key === Keys.down) {
+      const nextRowElement = this.getPrevNextRow(rowElement, key);
       if (nextRowElement) {
         const children = nextRowElement.getElementsByClassName('datatable-body-cell');
-        if (children.length) nextCellElement = children[cellIndex];
+        if (children.length) {
+          nextCellElement = children[cellIndex];
+        }
       }
     }
 
-    if (nextCellElement) nextCellElement.focus();
+    if (
+      nextCellElement &&
+      'focus' in nextCellElement &&
+      typeof nextCellElement.focus === 'function'
+    ) {
+      nextCellElement.focus();
+    }
   }
 
-  getRowSelected(row: any): boolean {
+  getRowSelected(row: TRow): boolean {
     return this.getRowSelectedIdx(row, this.selected) > -1;
   }
 
-  getRowSelectedIdx(row: any, selected: any[]): number {
-    if (!selected || !selected.length) return -1;
+  getRowSelectedIdx(row: TRow, selected: any[]): number {
+    if (!selected || !selected.length) {
+      return -1;
+    }
 
     const rowId = this.rowIdentity(row);
     return selected.findIndex(r => {

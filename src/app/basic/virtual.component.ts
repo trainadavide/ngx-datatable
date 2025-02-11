@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { FullEmployee } from '../data.model';
 
 @Component({
   selector: 'virtual-scroll-demo',
@@ -39,10 +40,11 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         <ngx-datatable-column name="Row Height" prop="height" [width]="80"> </ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class VirtualScrollComponent {
-  rows;
+  rows: FullEmployee[];
   expanded = {};
   timeout: any;
 

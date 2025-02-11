@@ -1,8 +1,15 @@
-import { Directive, TemplateRef } from '@angular/core';
+import { Directive } from '@angular/core';
+import { RowDetailContext } from '../../types/public.types';
 
 @Directive({
-  selector: '[ngx-datatable-row-detail-template]'
+  selector: '[ngx-datatable-row-detail-template]',
+  standalone: true
 })
 export class DatatableRowDetailTemplateDirective {
-  constructor(public template: TemplateRef<any>) {}
+  static ngTemplateContextGuard(
+    directive: DatatableRowDetailTemplateDirective,
+    context: unknown
+  ): context is RowDetailContext {
+    return true;
+  }
 }

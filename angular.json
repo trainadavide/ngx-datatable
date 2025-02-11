@@ -18,22 +18,23 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/ngx-datatable",
+            "outputPath": {
+              "base": "dist/ngx-datatable",
+              "browser": ""
+            },
             "index": "src/index.html",
-            "main": "src/main.ts",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": ["src/polyfills.ts"],
             "tsConfig": "tsconfig.app.json",
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": ["src/styles.scss"],
             "scripts": [],
-            "vendorChunk": true,
             "extractLicenses": false,
-            "buildOptimizer": false,
             "sourceMap": true,
             "optimization": false,
-            "namedChunks": true
+            "namedChunks": true,
+            "browser": "src/main.ts"
           },
           "configurations": {
             "production": {
@@ -48,8 +49,6 @@
               "sourceMap": false,
               "namedChunks": false,
               "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "budgets": [
                 {
                   "type": "initial",
@@ -59,7 +58,7 @@
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "6kb",
-                  "maximumError": "10kb"
+                  "maximumError": "16kb"
                 }
               ]
             }
@@ -69,18 +68,23 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "ngx-datatable:build"
+            "buildTarget": "ngx-datatable:build",
+            "hmr": true
           },
           "configurations": {
             "production": {
-              "browserTarget": "ngx-datatable:build:production"
+              "buildTarget": "ngx-datatable:build:production"
+            },
+            "development": {
+              "buildTarget": "ngx-datatable:build:production",
+              "hmr": true
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ngx-datatable:build"
+            "buildTarget": "ngx-datatable:build"
           }
         },
         "test": {
@@ -93,6 +97,12 @@
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": ["src/styles.scss"],
             "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html", "cypress/**/*.js"]
           }
         },
         "e2e": {
@@ -131,12 +141,19 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "main": "projects/swimlane/ngx-datatable/src/test.ts",
-            "tsConfig": "projects/swimlane/ngx-datatable/tsconfig.spec.json",
-            "karmaConfig": "projects/swimlane/ngx-datatable/karma.conf.js"
+            "tsConfig": "projects/swimlane/ngx-datatable/tsconfig.spec.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/swimlane/ngx-datatable/src/**/*.ts",
+              "projects/swimlane/ngx-datatable/src/**/*.html"
+            ]
           }
         }
       }
     }
-  },
-  "defaultProject": "ngx-datatable"
+  }
 }

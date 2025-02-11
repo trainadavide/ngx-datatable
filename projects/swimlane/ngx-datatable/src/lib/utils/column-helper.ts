@@ -7,8 +7,10 @@ import { DataTableColumnDirective } from '../components/columns/column.directive
 /**
  * Sets the column defaults
  */
-export function setColumnDefaults(columns: TableColumn[]) {
-  if (!columns) return;
+export function setColumnDefaults(columns: TableColumn[], defaultColumnWidth = 150) {
+  if (!columns) {
+    return;
+  }
 
   // Only one column should hold the tree view
   // Thus if multiple columns are provided with
@@ -39,27 +41,27 @@ export function setColumnDefaults(columns: TableColumn[]) {
       column.name = ''; // Fixes IE and Edge displaying `null`
     }
 
-    if (!column.hasOwnProperty('resizeable')) {
+    if (!('resizeable' in column)) {
       column.resizeable = true;
     }
 
-    if (!column.hasOwnProperty('sortable')) {
+    if (!('sortable' in column)) {
       column.sortable = true;
     }
 
-    if (!column.hasOwnProperty('draggable')) {
+    if (!('draggable' in column)) {
       column.draggable = true;
     }
 
-    if (!column.hasOwnProperty('canAutoResize')) {
+    if (!('canAutoResize' in column)) {
       column.canAutoResize = true;
     }
 
-    if (!column.hasOwnProperty('width')) {
-      column.width = 150;
+    if (!('width' in column)) {
+      column.width = defaultColumnWidth;
     }
 
-    if (!column.hasOwnProperty('isTreeColumn')) {
+    if (!('isTreeColumn' in column)) {
       column.isTreeColumn = false;
     } else {
       if (column.isTreeColumn && !treeColumnFound) {
@@ -82,10 +84,12 @@ export function isNullOrUndefined<T>(value: T | null | undefined): value is null
 /**
  * Translates templates definitions to objects
  */
-export function translateTemplates(templates: DataTableColumnDirective[]): any[] {
-  const result: any[] = [];
+export function translateTemplates<TRow>(
+  templates: DataTableColumnDirective<TRow>[]
+): TableColumn[] {
+  const result: TableColumn[] = [];
   for (const temp of templates) {
-    const col: any = {};
+    const col: TableColumn = {};
 
     const props = Object.getOwnPropertyNames(temp);
     for (const prop of props) {
@@ -98,6 +102,10 @@ export function translateTemplates(templates: DataTableColumnDirective[]): any[]
 
     if (temp.cellTemplate) {
       col.cellTemplate = temp.cellTemplate;
+    }
+
+    if (temp.ghostCellTemplate) {
+      col.ghostCellTemplate = temp.ghostCellTemplate;
     }
 
     if (temp.summaryFunc) {

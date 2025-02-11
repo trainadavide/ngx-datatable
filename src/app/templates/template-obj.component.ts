@@ -1,5 +1,6 @@
 import { Component, TemplateRef, ViewChild } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, TableColumn } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'template-ref-demo',
@@ -27,21 +28,27 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
       >
       </ngx-datatable>
 
-      <ng-template #hdrTpl let-column="column"> <strong>Fancy</strong>: {{ column.name }} !! </ng-template>
+      <ng-template #hdrTpl let-column="column">
+        <strong>Fancy</strong>: {{ column.name }} !!
+      </ng-template>
 
       <ng-template #editTmpl let-row="row" let-value="value">
-        <img *ngIf="value === 'male'" width="150" src="https://media.giphy.com/media/I8nepxWwlEuqI/giphy.gif" />
-        <img *ngIf="value === 'female'" width="150" src="https://media.giphy.com/media/sxSVG3XHf7yww/giphy.gif" />
+        @if (value === 'male') {
+        <img width="150" src="https://media.giphy.com/media/I8nepxWwlEuqI/giphy.gif" alt="" />
+        } @if (value === 'female') {
+        <img width="150" src="https://media.giphy.com/media/sxSVG3XHf7yww/giphy.gif" alt="" />
+        }
       </ng-template>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class TemplateRefTemplatesComponent {
   @ViewChild('editTmpl', { static: true }) editTmpl: TemplateRef<any>;
   @ViewChild('hdrTpl', { static: true }) hdrTpl: TemplateRef<any>;
 
-  rows = [];
-  columns = [];
+  rows: Employee[] = [];
+  columns: TableColumn[] = [];
 
   ColumnMode = ColumnMode;
 

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { FullEmployee } from '../data.model';
 
 @Component({
   selector: 'row-css-demo',
@@ -26,16 +27,20 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         [scrollbarV]="true"
       >
         <ngx-datatable-column name="Name"></ngx-datatable-column>
-        <ngx-datatable-column name="Gender" headerClass="is-gender" [cellClass]="getCellClass"></ngx-datatable-column>
+        <ngx-datatable-column
+          name="Gender"
+          headerClass="is-gender"
+          [cellClass]="getCellClass"
+        ></ngx-datatable-column>
         <ngx-datatable-column name="Age"></ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class RowCssComponent {
-  rows = [];
+  rows: FullEmployee[] = [];
   expanded = {};
-  timeout: any;
 
   ColumnMode = ColumnMode;
 

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, TableColumn } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'summary-row-simple-demo',
@@ -47,12 +48,13 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
       </ngx-datatable>
     </div>
   `,
-  styleUrls: ['./summary-row-simple.component.scss']
+  styleUrls: ['./summary-row-simple.component.scss'],
+  standalone: false
 })
 export class SummaryRowSimpleComponent {
-  rows = [];
+  rows: Employee[] = [];
 
-  columns = [
+  columns: TableColumn[] = [
     { prop: 'name', summaryFunc: null },
     { name: 'Gender', summaryFunc: cells => this.summaryForGender(cells) },
     { prop: 'age', summaryFunc: cells => this.avgAge(cells) }
@@ -69,7 +71,7 @@ export class SummaryRowSimpleComponent {
     });
   }
 
-  fetch(cb: (data: [unknown]) => void) {
+  fetch(cb: (data: [Employee]) => void) {
     const req = new XMLHttpRequest();
     req.open('GET', `assets/data/company.json`);
 

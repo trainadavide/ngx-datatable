@@ -51,6 +51,7 @@ $datatable-body-cell-color: rgba(0, 0, 0, 0.87) !default;
 $datatable-group-header-background: #f5f5f5 !default;
 $datatable-group-header-border-top-color: #d9d8d9 !default;
 $datatable-group-header-border-bottom-color: #d9d8d9 !default;
+$datatable-body-row-border-bottom-color: #d9d8d9 !default;
 
 // colors for footer elements
 $datatable-footer-cell-color: rgba(0, 0, 0, 0.54) !default;
@@ -65,6 +66,21 @@ $datatable-pager-active-background: rgba(158, 158, 158, 0.2) !default;
 // colors for summary row elements
 $datatable-summary-row-background: #ddd !default;
 $datatable-summary-row-background-hover: #ddd !default;
+
+$datatable-ghost-cell-container-background: $ngx-datatable-background !default;
+$datatable-ghost-cell-strip-background: #d9d8d9 !default;
+$datatable-ghost-cell-strip-background-image: linear-gradient(
+  to right,
+  $datatable-ghost-cell-strip-background 0%,
+  $datatable-ghost-cell-strip-background 10%,
+  $ngx-datatable-background,
+  transparent
+) !default;
+$datatable-ghost-cell-strip-radius: 0 !default;
+$datatble-ghost-cell-animation-duration: 10s;
+
+@import './ghost';
+@import './rows';
 
 .ngx-datatable.material {
   background: $ngx-datatable-background;
@@ -119,33 +135,33 @@ $datatable-summary-row-background-hover: #ddd !default;
 
   &.cell-selection {
     .datatable-body-cell {
-      &:hover,
-      &:hover .datatable-row-group {
+      &:hover:not(.row-disabled),
+      &:hover:not(.row-disabled) .datatable-row-group {
         background-color: $ngx-datatable-cellselection-background-hover;
         transition-property: background;
         transition-duration: 0.3s;
         transition-timing-function: linear;
       }
 
-      &:focus,
-      &:focus .datatable-row-group {
+      &:focus:not(.row-disabled),
+      &:focus:not(.row-disabled) .datatable-row-group {
         background-color: $ngx-datatable-cellselection-background-focus;
       }
 
-      &.active,
-      &.active .datatable-row-group {
+      &.active:not(.row-disabled),
+      &.active:not(.row-disabled) .datatable-row-group {
         background-color: $ngx-datatable-selected-active-background;
         color: $ngx-datatable-selected-active-color;
       }
 
-      &.active:hover,
-      &.active:hover .datatable-row-group {
+      &.active:hover:not(.row-disabled),
+      &.active:hover:not(.row-disabled) .datatable-row-group {
         background-color: $ngx-datatable-selected-active-background-hover;
         color: $ngx-datatable-selected-active-color-hover;
       }
 
-      &.active:focus,
-      &.active:focus .datatable-row-group {
+      &.active:focus:not(.row-disabled),
+      &.active:focus:not(.row-disabled) .datatable-row-group {
         background-color: $ngx-datatable-selected-active-background-focus;
         color: $ngx-datatable-selected-active-color-focus;
       }
@@ -197,6 +213,7 @@ $datatable-summary-row-background-hover: #ddd !default;
     border-bottom: 1px solid $datatable-header-border-bottom-color;
 
     .datatable-header-cell {
+      flex-shrink: 0;
       text-align: left;
       padding: 0.9rem 1.2rem;
       font-weight: 400;
@@ -262,10 +279,22 @@ $datatable-summary-row-background-hover: #ddd !default;
       background: $datatable-group-header-background;
       border-bottom: solid 1px $datatable-group-header-border-bottom-color;
       border-top: solid 1px $datatable-group-header-border-top-color;
+
+      .datatable-group-cell {
+        padding-inline-start: 1.2rem;
+        display: flex;
+      }
+    }
+
+    datatable-row-def {
+      background-color: $ngx-datatable-background;
     }
 
     .datatable-body-row {
+      border-bottom: 1px solid $datatable-body-row-border-bottom-color;
+
       .datatable-body-cell {
+        flex-shrink: 0;
         text-align: left;
         padding: 0.9rem 1.2rem;
         vertical-align: top;
@@ -296,7 +325,8 @@ $datatable-summary-row-background-hover: #ddd !default;
       display: block;
       position: sticky;
       width: 100%;
-      height: 5px;
+      height: 0;
+      z-index: 999;
       padding: 0;
       margin: 0;
       top: 0;
@@ -327,6 +357,17 @@ $datatable-summary-row-background-hover: #ddd !default;
           width: 100%;
           height: 5px;
         }
+      }
+    }
+
+    .custom-loading-indicator-wrapper {
+      position: sticky;
+      top: 0;
+      height: 0;
+      z-index: 999;
+      .custom-loading-content {
+        width: 100%;
+        background-color: $ngx-datatable-default-background;
       }
     }
   }

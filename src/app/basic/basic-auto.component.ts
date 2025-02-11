@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, TableColumn } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'basic-auto-demo',
@@ -29,14 +30,19 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
       >
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class BasicAutoComponent {
-  rows = [];
+  rows: Employee[] = [];
   loadingIndicator = true;
   reorderable = true;
 
-  columns = [{ prop: 'name' }, { name: 'Gender' }, { name: 'Company', sortable: false }];
+  columns: TableColumn[] = [
+    { prop: 'name' },
+    { name: 'Gender' },
+    { name: 'Company', sortable: false }
+  ];
 
   ColumnMode = ColumnMode;
 

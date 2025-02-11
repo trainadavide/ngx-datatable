@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'client-paging-demo',
@@ -28,10 +29,11 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
       >
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class ClientPagingComponent {
-  rows = [];
+  rows: Employee[] = [];
 
   ColumnMode = ColumnMode;
 

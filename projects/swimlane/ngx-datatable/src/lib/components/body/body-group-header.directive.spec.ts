@@ -1,4 +1,4 @@
-import { TestBed, ComponentFixture, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
@@ -12,31 +12,32 @@ import { DatatableGroupHeaderTemplateDirective } from './body-group-header-templ
     <ngx-datatable-group-header id="t2">
       <ng-template ngx-datatable-group-header-template></ng-template>
     </ngx-datatable-group-header>
-  `
+  `,
+  imports: [DatatableGroupHeaderDirective, DatatableGroupHeaderTemplateDirective]
 })
 class TestFixtureComponent {}
 
 describe('DatatableGroupHeaderDirective', () => {
   let fixture: ComponentFixture<TestFixtureComponent>;
   let component: TestFixtureComponent;
-  let element: any;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [DatatableGroupHeaderDirective, DatatableGroupHeaderTemplateDirective, TestFixtureComponent]
+      imports: [
+        DatatableGroupHeaderDirective,
+        DatatableGroupHeaderTemplateDirective,
+        TestFixtureComponent
+      ]
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(TestFixtureComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(TestFixtureComponent);
+      component = fixture.componentInstance;
+    });
+  }));
 
   describe('fixture', () => {
     let directive: DatatableGroupHeaderDirective;
@@ -60,7 +61,9 @@ describe('DatatableGroupHeaderDirective', () => {
     let directive: DatatableGroupHeaderDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.css('#t1')).injector.get(DatatableGroupHeaderDirective);
+      directive = fixture.debugElement
+        .query(By.css('#t1'))
+        .injector.get(DatatableGroupHeaderDirective);
     });
 
     it('should be found', () => {
@@ -77,7 +80,9 @@ describe('DatatableGroupHeaderDirective', () => {
     let directive: DatatableGroupHeaderDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.css('#t2')).injector.get(DatatableGroupHeaderDirective);
+      directive = fixture.debugElement
+        .query(By.css('#t2'))
+        .injector.get(DatatableGroupHeaderDirective);
     });
 
     it('should be found', () => {

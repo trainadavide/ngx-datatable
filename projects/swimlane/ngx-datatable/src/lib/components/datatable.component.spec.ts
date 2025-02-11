@@ -7,6 +7,9 @@ import { NgxDatatableModule } from '../ngx-datatable.module';
 import { DatatableComponent } from './datatable.component';
 import { DataTableBodyRowComponent } from './body/body-row.component';
 import { DataTableBodyCellComponent } from './body/body-cell.component';
+import { DataTableColumnDirective } from './columns/column.directive';
+import { DataTableColumnCellDirective } from './columns/column-cell.directive';
+import { DataTableColumnHeaderDirective } from './columns/column-header.directive';
 
 let fixture: ComponentFixture<any>;
 let component: any;
@@ -79,7 +82,11 @@ describe('DatatableComponent', () => {
   });
 
   it('should sort string values', () => {
-    const initialRows = [{ product: 'Computers' }, { product: 'Bikes' }, { product: 'Smartphones' }];
+    const initialRows = [
+      { product: 'Computers' },
+      { product: 'Bikes' },
+      { product: 'Smartphones' }
+    ];
 
     const columns = [
       {
@@ -313,7 +320,9 @@ describe('DatatableComponent', () => {
     component.columns = columns;
     fixture.detectChanges();
 
-    const datatableComponent = fixture.debugElement.query(By.directive(DatatableComponent)).componentInstance;
+    const datatableComponent = fixture.debugElement.query(
+      By.directive(DatatableComponent)
+    ).componentInstance;
     datatableComponent.offset = 1;
 
     // sort by `id` descending
@@ -393,7 +402,8 @@ describe('DatatableComponent With Custom Templates', () => {
 });
 
 @Component({
-  template: ` <ngx-datatable [columns]="columns" [rows]="rows" [sorts]="sorts"> </ngx-datatable> `
+  template: ` <ngx-datatable [columns]="columns" [rows]="rows" [sorts]="sorts"></ngx-datatable> `,
+  imports: [DatatableComponent]
 })
 class TestFixtureComponent {
   columns: any[] = [];
@@ -421,8 +431,15 @@ class TestFixtureComponent {
         </ng-template>
       </ngx-datatable-column>
     </ngx-datatable>
-  `
+  `,
+  imports: [
+    DatatableComponent,
+    DataTableColumnDirective,
+    DataTableColumnCellDirective,
+    DataTableColumnHeaderDirective
+  ]
 })
+// eslint-disable-next-line @angular-eslint/component-class-suffix
 class TestFixtureComponentWithCustomTemplates {
   rows: any[] = [];
   sorts: any[] = [];
@@ -431,8 +448,7 @@ class TestFixtureComponentWithCustomTemplates {
 
 function setupTest(componentClass) {
   return TestBed.configureTestingModule({
-    declarations: [componentClass],
-    imports: [NgxDatatableModule],
+    imports: [NgxDatatableModule, componentClass],
     providers: [ColumnChangesService]
   })
     .compileComponents()
@@ -458,7 +474,9 @@ function sortBy({ column }: { column: number }) {
  */
 function textContent({ row, column }: { row: number; column: number }) {
   const [rowIndex, columnIndex] = [row - 1, column - 1];
-  const bodyRowDe = fixture.debugElement.queryAll(By.directive(DataTableBodyRowComponent))[rowIndex];
+  const bodyRowDe = fixture.debugElement.queryAll(By.directive(DataTableBodyRowComponent))[
+    rowIndex
+  ];
   const bodyCellDe = bodyRowDe.queryAll(By.directive(DataTableBodyCellComponent))[columnIndex];
 
   return bodyCellDe.nativeElement.textContent;

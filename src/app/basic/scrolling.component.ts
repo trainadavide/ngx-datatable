@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { FullEmployee } from '../data.model';
 
 @Component({
   selector: 'horz-vert-scrolling-demo',
@@ -29,13 +30,18 @@ import { Component } from '@angular/core';
         <ngx-datatable-column name="Gender"></ngx-datatable-column>
         <ngx-datatable-column name="Age"></ngx-datatable-column>
         <ngx-datatable-column name="City" [width]="300" prop="address.city"></ngx-datatable-column>
-        <ngx-datatable-column name="State" [width]="300" prop="address.state"></ngx-datatable-column>
+        <ngx-datatable-column
+          name="State"
+          [width]="300"
+          prop="address.state"
+        ></ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
-export class HorzVertScrolling {
-  rows = [];
+export class HorzVertScrollingComponent {
+  rows: FullEmployee[] = [];
 
   constructor() {
     this.fetch(data => {

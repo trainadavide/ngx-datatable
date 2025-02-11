@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'summary-row-inline-html',
@@ -25,22 +26,28 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         rowHeight="auto"
         [rows]="rows"
       >
-        <ngx-datatable-column prop="name" [summaryTemplate]="nameSummaryCell"></ngx-datatable-column>
+        <ngx-datatable-column
+          prop="name"
+          [summaryTemplate]="nameSummaryCell"
+        ></ngx-datatable-column>
         <ngx-datatable-column name="Gender" [summaryFunc]="summaryForGender"></ngx-datatable-column>
         <ngx-datatable-column prop="age" [summaryFunc]="avgAge"></ngx-datatable-column>
       </ngx-datatable>
       <ng-template #nameSummaryCell>
         <div class="name-container">
-          <div class="chip" *ngFor="let name of getNames()">
+          @for (name of getNames(); track name) {
+          <div class="chip">
             <span class="chip-content">{{ name }}</span>
           </div>
+          }
         </div>
       </ng-template>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class SummaryRowInlineHtmlComponent {
-  rows = [];
+  rows: Employee[] = [];
 
   enableSummary = true;
   summaryPosition = 'top';

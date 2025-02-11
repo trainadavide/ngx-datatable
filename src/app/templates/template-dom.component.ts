@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'inline-templates-demo',
@@ -25,14 +26,16 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         rowHeight="auto"
       >
         <ngx-datatable-column name="Name">
-          <ng-template let-column="column" ngx-datatable-header-template> Holla! {{ column.name }} </ng-template>
+          <ng-template let-column="column" ngx-datatable-header-template>
+            Holla! {{ column.name }}
+          </ng-template>
           <ng-template let-value="value" ngx-datatable-cell-template>
             Hi: <strong>{{ value }}</strong>
           </ng-template>
         </ngx-datatable-column>
         <ngx-datatable-column name="Gender">
           <ng-template let-column="column" let-sort="sortFn" ngx-datatable-header-template>
-            <span (click)="sort()">{{ column.name }}</span>
+            <span tabindex="1" (click)="sort()" (keyup)="sort()">{{ column.name }}</span>
           </ng-template>
           <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
             My name is: <i [innerHTML]="row['name']"></i> and <i>{{ value }}</i>
@@ -48,10 +51,11 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         </ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class InlineTemplatesComponent {
-  rows = [];
+  rows: Employee[] = [];
   joke = 'knock knock';
 
   ColumnMode = ColumnMode;

@@ -1,73 +1,109 @@
 import {
-  Component,
-  Input,
-  PipeTransform,
-  HostBinding,
-  ViewChild,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
-  Output,
-  EventEmitter,
-  HostListener,
-  ElementRef,
-  ViewContainerRef,
-  OnDestroy,
+  Component,
   DoCheck,
-  ChangeDetectionStrategy
+  ElementRef,
+  EventEmitter,
+  HostBinding,
+  HostListener,
+  inject,
+  Input,
+  OnDestroy,
+  Output,
+  PipeTransform,
+  ViewChild,
+  ViewContainerRef
 } from '@angular/core';
 
 import { TableColumn } from '../../types/table-column.type';
-import { SortDirection } from '../../types/sort-direction.type';
 import { Keys } from '../../utils/keys';
-
-export type TreeStatus = 'collapsed' | 'expanded' | 'loading' | 'disabled';
+import { BehaviorSubject } from 'rxjs';
+import {
+  ActivateEvent,
+  CellContext,
+  RowOrGroup,
+  SortDirection,
+  SortPropDir,
+  TreeStatus
+} from '../../types/public.types';
+import { DataTableGhostLoaderComponent } from './ghost-loader/ghost-loader.component';
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 
 @Component({
   selector: 'datatable-body-cell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (row) {
     <div class="datatable-body-cell-label" [style.margin-left.px]="calcLeftMargin(column, row)">
-      <label
-        *ngIf="column.checkboxable && (!displayCheck || displayCheck(row, column, value))"
-        class="datatable-checkbox"
-      >
-        <input type="checkbox" [checked]="isSelected" (click)="onCheckboxChange($event)" />
+      @if (column.checkboxable && (!displayCheck || displayCheck(row, column, value))) {
+      <label class="datatable-checkbox">
+        <input
+          type="checkbox"
+          [disabled]="disable$ | async"
+          [checked]="isSelected"
+          (click)="onCheckboxChange($event)"
+        />
       </label>
-      <ng-container *ngIf="column.isTreeColumn">
-        <button
-          *ngIf="!column.treeToggleTemplate"
-          class="datatable-tree-button"
-          [disabled]="treeStatus === 'disabled'"
-          (click)="onTreeAction()"
-        >
-          <span>
-            <i *ngIf="treeStatus === 'loading'" class="icon datatable-icon-collapse"></i>
-            <i *ngIf="treeStatus === 'collapsed'" class="icon datatable-icon-up"></i>
-            <i *ngIf="treeStatus === 'expanded' || treeStatus === 'disabled'" class="icon datatable-icon-down"></i>
-          </span>
-        </button>
-        <ng-template
-          *ngIf="column.treeToggleTemplate"
-          [ngTemplateOutlet]="column.treeToggleTemplate"
-          [ngTemplateOutletContext]="{ cellContext: cellContext }"
-        >
-        </ng-template>
-      </ng-container>
-
-      <span *ngIf="!column.cellTemplate" [title]="sanitizedValue" [innerHTML]="value"> </span>
+      } @if (column.isTreeColumn) { @if (!column.treeToggleTemplate) {
+      <button
+        class="datatable-tree-button"
+        [disabled]="treeStatus === 'disabled'"
+        (click)="onTreeAction()"
+        [attr.aria-label]="treeStatus"
+      >
+        <span>
+          @if (treeStatus === 'loading') {
+          <i class="icon datatable-icon-collapse"></i>
+          } @if (treeStatus === 'collapsed') {
+          <i class="icon datatable-icon-up"></i>
+          } @if (treeStatus === 'expanded' || treeStatus === 'disabled') {
+          <i class="icon datatable-icon-down"></i>
+          }
+        </span>
+      </button>
+      } @else {
+      <ng-template
+        [ngTemplateOutlet]="column.treeToggleTemplate"
+        [ngTemplateOutletContext]="{ cellContext: cellContext }"
+      >
+      </ng-template>
+      } } @if (!column.cellTemplate) { @if (column.bindAsUnsafeHtml) {
+      <span [title]="sanitizedValue" [innerHTML]="value"> </span>
+      } @else {
+      <span [title]="sanitizedValue">{{ value }}</span>
+      } } @else {
       <ng-template
         #cellTemplate
-        *ngIf="column.cellTemplate"
         [ngTemplateOutlet]="column.cellTemplate"
         [ngTemplateOutletContext]="cellContext"
       >
       </ng-template>
+      }
     </div>
-  `
+    } @else { @if (ghostLoadingIndicator) {
+    <ghost-loader [columns]="[column]" [pageSize]="1"></ghost-loader>
+    } }
+  `,
+  imports: [NgTemplateOutlet, DataTableGhostLoaderComponent, AsyncPipe]
 })
-export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
-  @Input() displayCheck: (row: any, column?: TableColumn, value?: any) => boolean;
+export class DataTableBodyCellComponent<TRow extends { level?: number } = any>
+  implements DoCheck, OnDestroy
+{
+  private cd = inject(ChangeDetectorRef);
 
-  @Input() set group(group: any) {
+  @Input() displayCheck: (row: RowOrGroup<TRow>, column: TableColumn, value: any) => boolean;
+
+  _disable$: BehaviorSubject<boolean>;
+  @Input() set disable$(val: BehaviorSubject<boolean>) {
+    this._disable$ = val;
+    this.cellContext.disable$ = val;
+  }
+  get disable$() {
+    return this._disable$;
+  }
+
+  @Input() set group(group: TRow[]) {
     this._group = group;
     this.cellContext.group = group;
     this.checkValueUpdates();
@@ -131,28 +167,33 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     return this._column;
   }
 
-  @Input() set row(row: any) {
+  @Input() set row(row: TRow) {
     this._row = row;
     this.cellContext.row = row;
     this.checkValueUpdates();
     this.cd.markForCheck();
   }
 
-  get row(): any {
+  get row(): TRow {
     return this._row;
   }
 
-  @Input() set sorts(val: any[]) {
+  @Input() set sorts(val: SortPropDir[]) {
     this._sorts = val;
-    this.calcSortDir = this.calcSortDir(val);
+    this.sortDir = this.calcSortDir(val);
   }
 
-  get sorts(): any[] {
+  get sorts(): SortPropDir[] {
     return this._sorts;
   }
 
   @Input() set treeStatus(status: TreeStatus) {
-    if (status !== 'collapsed' && status !== 'expanded' && status !== 'loading' && status !== 'disabled') {
+    if (
+      status !== 'collapsed' &&
+      status !== 'expanded' &&
+      status !== 'loading' &&
+      status !== 'disabled'
+    ) {
       this._treeStatus = 'collapsed';
     } else {
       this._treeStatus = status;
@@ -166,15 +207,20 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     return this._treeStatus;
   }
 
-  @Output() activate: EventEmitter<any> = new EventEmitter();
+  @Input() ghostLoadingIndicator = false;
+
+  @Output() activate: EventEmitter<ActivateEvent<TRow>> = new EventEmitter();
 
   @Output() treeAction: EventEmitter<any> = new EventEmitter();
 
   @ViewChild('cellTemplate', { read: ViewContainerRef, static: true })
   cellTemplate: ViewContainerRef;
 
+  @ViewChild('ghostLoaderTemplate', { read: ViewContainerRef, static: true })
+  ghostLoaderTemplate: ViewContainerRef;
+
   @HostBinding('class')
-  get columnCssClasses(): any {
+  get columnCssClasses(): string {
     let cls = 'datatable-body-cell';
     if (this.column.cellClass) {
       if (typeof this.column.cellClass === 'string') {
@@ -203,7 +249,7 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     if (!this.sortDir) {
       cls += ' sort-active';
     }
-    if (this.isFocused) {
+    if (this.isFocused && !this.disable$?.value) {
       cls += ' active';
     }
     if (this.sortDir === SortDirection.asc) {
@@ -211,6 +257,9 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     }
     if (this.sortDir === SortDirection.desc) {
       cls += ' sort-desc';
+    }
+    if (this.disable$?.value) {
+      cls += ' row-disabled';
     }
 
     return cls;
@@ -240,30 +289,28 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     return height + 'px';
   }
 
-  sanitizedValue: any;
+  sanitizedValue: string;
   value: any;
   sortDir: SortDirection;
   isFocused = false;
-  onCheckboxChangeFn = this.onCheckboxChange.bind(this);
-  activateFn = this.activate.emit.bind(this.activate);
 
-  cellContext: any;
+  cellContext: CellContext<TRow>;
 
   private _isSelected: boolean;
-  private _sorts: any[];
+  private _sorts: SortPropDir[];
   private _column: TableColumn;
-  private _row: any;
-  private _group: any;
+  private _row: TRow;
+  private _group: TRow[];
   private _rowHeight: number;
   private _rowIndex: number;
   private _expanded: boolean;
-  private _element: any;
+  private _element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private _treeStatus: TreeStatus;
 
-  constructor(element: ElementRef, private cd: ChangeDetectorRef) {
+  constructor() {
     this.cellContext = {
-      onCheckboxChangeFn: this.onCheckboxChangeFn,
-      activateFn: this.activateFn,
+      onCheckboxChangeFn: (event: MouseEvent | KeyboardEvent) => this.onCheckboxChange(event),
+      activateFn: (event: ActivateEvent<TRow>) => this.activate.emit(event),
       row: this.row,
       group: this.group,
       value: this.value,
@@ -272,10 +319,9 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
       isSelected: this.isSelected,
       rowIndex: this.rowIndex,
       treeStatus: this.treeStatus,
-      onTreeAction: this.onTreeAction.bind(this)
+      disable$: this.disable$,
+      onTreeAction: () => this.onTreeAction()
     };
-
-    this._element = element.nativeElement;
   }
 
   ngDoCheck(): void {
@@ -285,6 +331,9 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
   ngOnDestroy(): void {
     if (this.cellTemplate) {
       this.cellTemplate.clear();
+    }
+    if (this.ghostLoaderTemplate) {
+      this.ghostLoaderTemplate.clear();
     }
   }
 
@@ -307,6 +356,7 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     if (this.value !== value) {
       this.value = value;
       this.cellContext.value = value;
+      this.cellContext.disable$ = this.disable$;
       this.sanitizedValue = value !== null && value !== undefined ? this.stripHtml(value) : value;
       this.cd.markForCheck();
     }
@@ -352,15 +402,15 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
 
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    const keyCode = event.keyCode;
+    const key = event.key;
     const isTargetCell = event.target === this._element;
 
     const isAction =
-      keyCode === Keys.return ||
-      keyCode === Keys.down ||
-      keyCode === Keys.up ||
-      keyCode === Keys.left ||
-      keyCode === Keys.right;
+      key === Keys.return ||
+      key === Keys.down ||
+      key === Keys.up ||
+      key === Keys.left ||
+      key === Keys.right;
 
     if (isAction && isTargetCell) {
       event.preventDefault();
@@ -379,7 +429,7 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     }
   }
 
-  onCheckboxChange(event: any): void {
+  onCheckboxChange(event: MouseEvent | KeyboardEvent): void {
     this.activate.emit({
       type: 'checkbox',
       event,
@@ -393,17 +443,15 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     });
   }
 
-  calcSortDir(sorts: any[]): any {
+  calcSortDir(sorts: SortPropDir[]): SortDirection {
     if (!sorts) {
       return;
     }
 
-    const sort = sorts.find((s: any) => {
-      return s.prop === this.column.prop;
-    });
+    const sort = sorts.find(s => s.prop === this.column.prop);
 
     if (sort) {
-      return sort.dir;
+      return sort.dir as SortDirection;
     }
   }
 
@@ -418,8 +466,8 @@ export class DataTableBodyCellComponent implements DoCheck, OnDestroy {
     this.treeAction.emit(this.row);
   }
 
-  calcLeftMargin(column: any, row: any) {
+  calcLeftMargin(column: TableColumn, row: RowOrGroup<TRow>): number {
     const levelIndent = column.treeLevelIndent != null ? column.treeLevelIndent : 50;
-    return column.isTreeColumn ? row.level * levelIndent : 0;
+    return column.isTreeColumn ? (row as TRow).level * levelIndent : 0;
   }
 }

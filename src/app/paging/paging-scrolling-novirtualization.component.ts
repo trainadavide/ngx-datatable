@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MockServerResultsService } from './mock-server-results-service';
-import { CorporateEmployee } from './model/corporate-employee';
 import { Page } from './model/page';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'paging-scrolling-novirtualization-demo',
@@ -34,22 +34,27 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         [count]="page.totalElements"
         [offset]="page.pageNumber"
         [limit]="page.size"
+        [ghostLoadingIndicator]="isLoading > 0"
         (page)="setPage($event)"
       >
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
-export class PagingScrollingNoVirtualizationComponent {
-  page = new Page();
-  rows = new Array<CorporateEmployee>();
+export class PagingScrollingNoVirtualizationComponent implements OnInit {
+  page: Page = {
+    pageNumber: 0,
+    size: 20,
+    totalElements: 0,
+    totalPages: 0
+  };
+  rows: Employee[] = [];
 
   ColumnMode = ColumnMode;
+  isLoading = 0;
 
-  constructor(private serverResultsService: MockServerResultsService) {
-    this.page.pageNumber = 0;
-    this.page.size = 20;
-  }
+  constructor(private serverResultsService: MockServerResultsService) {}
 
   ngOnInit() {
     this.setPage({ offset: 0 });
@@ -61,7 +66,9 @@ export class PagingScrollingNoVirtualizationComponent {
    */
   setPage(pageInfo) {
     this.page.pageNumber = pageInfo.offset;
+    this.isLoading++;
     this.serverResultsService.getResults(this.page).subscribe(pagedData => {
+      this.isLoading--;
       this.page = pagedData.page;
       this.rows = pagedData.data;
     });

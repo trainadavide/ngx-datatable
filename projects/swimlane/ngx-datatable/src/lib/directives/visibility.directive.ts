@@ -1,4 +1,14 @@
-import { Directive, Output, EventEmitter, ElementRef, HostBinding, NgZone, OnInit, OnDestroy } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostBinding,
+  inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  Output
+} from '@angular/core';
 
 /**
  * Visibility Observer Directive
@@ -11,16 +21,20 @@ import { Directive, Output, EventEmitter, ElementRef, HostBinding, NgZone, OnIni
  * 		</div>
  *
  */
-@Directive({ selector: '[visibilityObserver]' })
+@Directive({
+  selector: '[visibilityObserver]',
+  standalone: true
+})
 export class VisibilityDirective implements OnInit, OnDestroy {
+  private element = inject(ElementRef);
+  private zone = inject(NgZone);
+
   @HostBinding('class.visible')
-  isVisible: boolean = false;
+  isVisible = false;
 
   @Output() visible: EventEmitter<any> = new EventEmitter();
 
   timeout: any;
-
-  constructor(private element: ElementRef, private zone: NgZone) {}
 
   ngOnInit(): void {
     this.runCheck();

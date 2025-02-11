@@ -1,5 +1,6 @@
-import { PipeTransform } from '@angular/core';
+import { PipeTransform, TemplateRef } from '@angular/core';
 import { ValueGetter } from '../utils/column-prop-getters';
+import { CellContext, HeaderCellContext } from './public.types';
 
 /**
  * Column property that indicates how to retrieve this column's
@@ -11,46 +12,34 @@ export type TableColumnProp = string | number;
 /**
  * Column Type
  */
-export interface TableColumn {
+export interface TableColumn<TRow = any> {
   /**
    * Internal unique id
-   *
-   * @memberOf TableColumn
    */
   $$id?: string;
 
   /**
    * Internal for column width distributions
-   *
-   * @memberOf TableColumn
    */
   $$oldWidth?: number;
 
   /**
    * Internal for setColumnDefaults
-   *
-   * @memberOf TableColumn
    */
   $$valueGetter?: ValueGetter;
 
   /**
    * Determines if column is checkbox
-   *
-   * @memberOf TableColumn
    */
   checkboxable?: boolean;
 
   /**
    * Determines if the column is frozen to the left
-   *
-   * @memberOf TableColumn
    */
   frozenLeft?: boolean;
 
   /**
    * Determines if the column is frozen to the right
-   *
-   * @memberOf TableColumn
    */
   frozenRight?: boolean;
 
@@ -59,78 +48,65 @@ export interface TableColumn {
    * API from http =//www.w3.org/TR/css3-flexbox/. Basically;
    * take any available extra width and distribute it proportionally
    * according to all columns' flexGrow values.
-   *
-   * @memberOf TableColumn
    */
   flexGrow?: number;
 
   /**
    * Min width of the column
-   *
-   * @memberOf TableColumn
    */
   minWidth?: number;
 
   /**
    * Max width of the column
-   *
-   * @memberOf TableColumn
    */
   maxWidth?: number;
 
   /**
    * The default width of the column, in pixels
-   *
-   * @memberOf TableColumn
    */
   width?: number;
 
   /**
    * Can the column be resized
-   *
-   * @memberOf TableColumn
    */
   resizeable?: boolean;
 
   /**
    * Custom sort comparator
-   *
-   * @memberOf TableColumn
    */
   comparator?: any;
 
   /**
    * Custom pipe transforms
-   *
-   * @memberOf TableColumn
    */
   pipe?: PipeTransform;
 
   /**
    * Can the column be sorted
-   *
-   * @memberOf TableColumn
    */
   sortable?: boolean;
 
   /**
    * Can the column be re-arranged by dragging
-   *
-   * @memberOf TableColumn
    */
   draggable?: boolean;
 
+  /** @internal */
+  dragging?: boolean;
+
+  /** @internal */
+  isTarget?: boolean;
+
+  /** @internal */
+  targetMarkerContext?: any;
+
   /**
    * Whether the column can automatically resize to fill space in the table.
-   *
-   * @memberOf TableColumn
    */
   canAutoResize?: boolean;
 
   /**
    * Column name or label
-   *
-   * @memberOf TableColumn
    */
   name?: string;
 
@@ -140,80 +116,83 @@ export interface TableColumn {
    * `someField` or `some.field.nested`, 0 (numeric)
    *
    * If left blank, will use the name as camel case conversion
-   *
-   * @memberOf TableColumn
    */
   prop?: TableColumnProp;
 
   /**
-   * Cell template ref
+   * By default, the property is bound using normal data binding `<span>{{content}}</span>`.
+   * If this property is set to true, the property will be bound as `<span [innerHTML]="content" />`.
    *
-   * @memberOf TableColumn
+   * **DANGER** If enabling this feature, make sure the source of the data is trusted. This can be a vector for HTML injection attacks.
    */
-  cellTemplate?: any;
+  bindAsUnsafeHtml?: boolean;
+
+  /**
+   * Cell template ref
+   */
+  cellTemplate?: TemplateRef<CellContext<TRow>>;
+
+  /**
+   * Ghost Cell template ref
+   */
+  ghostCellTemplate?: TemplateRef<any>;
 
   /**
    * Header template ref
-   *
-   * @memberOf TableColumn
    */
-  headerTemplate?: any;
+  headerTemplate?: TemplateRef<HeaderCellContext>;
 
   /**
    * Tree toggle template ref
-   *
-   * @memberOf TableColumn
    */
   treeToggleTemplate?: any;
 
   /**
    * CSS Classes for the cell
-   *
-   *
-   * @memberOf TableColumn
    */
-  cellClass?: string | ((data: any) => string | any);
+  cellClass?:
+    | string
+    | ((data: {
+        row: TRow;
+        group?: TRow[];
+        column: TableColumn<TRow>;
+        value: any;
+        rowHeight: number;
+      }) => string | Record<string, boolean>);
 
   /**
    * CSS classes for the header
-   *
-   *
-   * @memberOf TableColumn
    */
-  headerClass?: string | ((data: any) => string | any);
+  headerClass?: string | ((data: { column: TableColumn }) => string | Record<string, boolean>);
 
   /**
    * Header checkbox enabled
-   *
-   * @memberOf TableColumn
    */
   headerCheckboxable?: boolean;
 
   /**
    * Is tree displayed on this column
-   *
-   * @memberOf TableColumn
    */
   isTreeColumn?: boolean;
 
   /**
    * Width of the tree level indent
-   *
-   * @memberOf TableColumn
    */
   treeLevelIndent?: number;
 
   /**
    * Summary function
-   *
-   * @memberOf TableColumn
    */
   summaryFunc?: (cells: any[]) => any;
 
   /**
    * Summary cell template ref
-   *
-   * @memberOf TableColumn
    */
-  summaryTemplate?: any;
+  summaryTemplate?: TemplateRef<any>;
+}
+
+export interface TableColumnGroup {
+  left: TableColumn[];
+  center: TableColumn[];
+  right: TableColumn[];
 }

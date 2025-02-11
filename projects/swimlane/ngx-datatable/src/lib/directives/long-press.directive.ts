@@ -1,17 +1,32 @@
-import { Directive, Input, Output, EventEmitter, HostBinding, HostListener, OnDestroy } from '@angular/core';
-import { Observable, Subscription, fromEvent } from 'rxjs';
+import {
+  booleanAttribute,
+  Directive,
+  EventEmitter,
+  HostBinding,
+  HostListener,
+  Input,
+  numberAttribute,
+  OnDestroy,
+  Output
+} from '@angular/core';
+import { fromEvent, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { MouseEvent } from '../events';
+import { TableColumn } from '../types/table-column.type';
 
-@Directive({ selector: '[long-press]' })
+@Directive({
+  selector: '[long-press]',
+  standalone: true
+})
 export class LongPressDirective implements OnDestroy {
-  @Input() pressEnabled: boolean = true;
-  @Input() pressModel: any;
-  @Input() duration: number = 500;
+  @Input({ transform: booleanAttribute }) pressEnabled = true;
+  @Input() pressModel: TableColumn;
+  @Input({ transform: numberAttribute }) duration = 500;
 
-  @Output() longPressStart: EventEmitter<any> = new EventEmitter();
-  @Output() longPressing: EventEmitter<any> = new EventEmitter();
-  @Output() longPressEnd: EventEmitter<any> = new EventEmitter();
+  @Output() longPressStart: EventEmitter<{ event: MouseEvent; model: TableColumn }> =
+    new EventEmitter();
+  @Output() longPressing: EventEmitter<{ event: MouseEvent; model: TableColumn }> =
+    new EventEmitter();
+  @Output() longPressEnd: EventEmitter<{ model: TableColumn }> = new EventEmitter();
 
   pressing: boolean;
   isLongPressing: boolean;
@@ -34,11 +49,15 @@ export class LongPressDirective implements OnDestroy {
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent): void {
     // don't do right/middle clicks
-    if (event.which !== 1 || !this.pressEnabled) return;
+    if (event.which !== 1 || !this.pressEnabled) {
+      return;
+    }
 
     // don't start drag if its on resize handle
-    const target = <HTMLElement>event.target;
-    if (target.classList.contains('resize-handle')) return;
+    const target = event.target as HTMLElement;
+    if (target.classList.contains('resize-handle')) {
+      return;
+    }
 
     this.mouseX = event.clientX;
     this.mouseY = event.clientY;
@@ -107,6 +126,7 @@ export class LongPressDirective implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.timeout);
     this._destroySubscription();
   }
 

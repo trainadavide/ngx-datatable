@@ -1,4 +1,4 @@
-import { TestBed, ComponentFixture, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DatatableRowDetailDirective } from './row-detail.directive';
@@ -11,31 +11,32 @@ import { DatatableRowDetailTemplateDirective } from './row-detail-template.direc
     <ngx-datatable-row-detail id="t2">
       <ng-template ngx-datatable-row-detail-template></ng-template>
     </ngx-datatable-row-detail>
-  `
+  `,
+  imports: [DatatableRowDetailDirective, DatatableRowDetailTemplateDirective]
 })
 class TestFixtureComponent {}
 
 describe('DatatableRowDetailDirective', () => {
   let fixture: ComponentFixture<TestFixtureComponent>;
   let component: TestFixtureComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [DatatableRowDetailDirective, DatatableRowDetailTemplateDirective, TestFixtureComponent]
+      imports: [
+        DatatableRowDetailDirective,
+        DatatableRowDetailTemplateDirective,
+        TestFixtureComponent
+      ]
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(TestFixtureComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(TestFixtureComponent);
+      component = fixture.componentInstance;
+    });
+  }));
 
   describe('fixture', () => {
     let directive: DatatableRowDetailDirective;
@@ -59,7 +60,9 @@ describe('DatatableRowDetailDirective', () => {
     let directive: DatatableRowDetailDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.css('#t1')).injector.get(DatatableRowDetailDirective);
+      directive = fixture.debugElement
+        .query(By.css('#t1'))
+        .injector.get(DatatableRowDetailDirective);
     });
 
     it('should be found', () => {
@@ -76,7 +79,9 @@ describe('DatatableRowDetailDirective', () => {
     let directive: DatatableRowDetailDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.css('#t2')).injector.get(DatatableRowDetailDirective);
+      directive = fixture.debugElement
+        .query(By.css('#t2'))
+        .injector.get(DatatableRowDetailDirective);
     });
 
     it('should be found', () => {

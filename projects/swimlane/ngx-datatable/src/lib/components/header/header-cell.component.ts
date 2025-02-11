@@ -1,58 +1,76 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
-  Input,
   EventEmitter,
-  Output,
   HostBinding,
   HostListener,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef
+  inject,
+  Input,
+  OnInit,
+  Output,
+  TemplateRef
 } from '@angular/core';
-import { SortType } from '../../types/sort.type';
-import { SelectionType } from '../../types/selection.type';
 import { TableColumn } from '../../types/table-column.type';
 import { nextSortDir } from '../../utils/sort';
-import { SortDirection } from '../../types/sort-direction.type';
+import {
+  HeaderCellContext,
+  InnerSortEvent,
+  SelectionType,
+  SortDirection,
+  SortPropDir,
+  SortType
+} from '../../types/public.types';
+import { NgTemplateOutlet } from '@angular/common';
 
 @Component({
   selector: 'datatable-header-cell',
   template: `
     <div class="datatable-header-cell-template-wrap">
+      @if (isTarget) {
       <ng-template
-        *ngIf="isTarget"
         [ngTemplateOutlet]="targetMarkerTemplate"
         [ngTemplateOutletContext]="targetMarkerContext"
       >
       </ng-template>
-      <label *ngIf="isCheckboxable" class="datatable-checkbox">
-        <input type="checkbox" [checked]="allRowsSelected" (change)="select.emit(!allRowsSelected)" />
+      } @if (isCheckboxable) {
+      <label class="datatable-checkbox">
+        <input type="checkbox" [checked]="allRowsSelected" (change)="select.emit()" />
       </label>
-      <span *ngIf="!column.headerTemplate" class="datatable-header-cell-wrapper">
-        <span class="datatable-header-cell-label draggable" (click)="onSort()" [innerHTML]="name"> </span>
-      </span>
+      } @if (column.headerTemplate) {
       <ng-template
-        *ngIf="column.headerTemplate"
         [ngTemplateOutlet]="column.headerTemplate"
         [ngTemplateOutletContext]="cellContext"
       >
       </ng-template>
+      } @else {
+      <span class="datatable-header-cell-wrapper">
+        <span class="datatable-header-cell-label draggable" (click)="onSort()">
+          {{ name }}
+        </span>
+      </span>
+      }
       <span (click)="onSort()" [class]="sortClass"> </span>
     </div>
   `,
   host: {
     class: 'datatable-header-cell'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgTemplateOutlet]
 })
-export class DataTableHeaderCellComponent {
+export class DataTableHeaderCellComponent implements OnInit {
+  private cd = inject(ChangeDetectorRef);
+
   @Input() sortType: SortType;
   @Input() sortAscendingIcon: string;
   @Input() sortDescendingIcon: string;
   @Input() sortUnsetIcon: string;
 
   @Input() isTarget: boolean;
-  @Input() targetMarkerTemplate: any;
+  @Input() targetMarkerTemplate: TemplateRef<any>;
   @Input() targetMarkerContext: any;
+  @Input() enableClearingSortState = false;
 
   _allRowsSelected: boolean;
 
@@ -80,7 +98,7 @@ export class DataTableHeaderCellComponent {
   @Input()
   headerHeight: number;
 
-  @Input() set sorts(val: any[]) {
+  @Input() set sorts(val: SortPropDir[]) {
     this._sorts = val;
     this.sortDir = this.calcSortDir(val);
     this.cellContext.sortDir = this.sortDir;
@@ -88,20 +106,24 @@ export class DataTableHeaderCellComponent {
     this.cd.markForCheck();
   }
 
-  get sorts(): any[] {
+  get sorts(): SortPropDir[] {
     return this._sorts;
   }
 
-  @Output() sort: EventEmitter<any> = new EventEmitter();
-  @Output() select: EventEmitter<any> = new EventEmitter();
-  @Output() columnContextmenu = new EventEmitter<{ event: MouseEvent; column: any }>(false);
+  @Output() sort: EventEmitter<InnerSortEvent> = new EventEmitter();
+  @Output() select: EventEmitter<void> = new EventEmitter();
+  @Output() columnContextmenu = new EventEmitter<{ event: MouseEvent; column: TableColumn }>(false);
 
   @HostBinding('class')
-  get columnCssClasses(): any {
+  get columnCssClasses(): string {
     let cls = 'datatable-header-cell';
 
-    if (this.column.sortable) cls += ' sortable';
-    if (this.column.resizeable) cls += ' resizeable';
+    if (this.column.sortable) {
+      cls += ' sortable';
+    }
+    if (this.column.resizeable) {
+      cls += ' resizeable';
+    }
     if (this.column.headerClass) {
       if (typeof this.column.headerClass === 'string') {
         cls += ' ' + this.column.headerClass;
@@ -111,11 +133,13 @@ export class DataTableHeaderCellComponent {
         });
 
         if (typeof res === 'string') {
-          cls += res;
+          cls += ' ' + res;
         } else if (typeof res === 'object') {
           const keys = Object.keys(res);
           for (const k of keys) {
-            if (res[k] === true) cls += ` ${k}`;
+            if (res[k] === true) {
+              cls += ` ${k}`;
+            }
           }
         }
       }
@@ -150,27 +174,29 @@ export class DataTableHeaderCellComponent {
     return this.column.width;
   }
 
-  get isCheckboxable(): boolean {
-    return this.column.checkboxable && this.column.headerCheckboxable && this.selectionType === SelectionType.checkbox;
+  @HostBinding('tabindex') get tabindex(): number {
+    return this.column.sortable ? 0 : -1;
   }
 
-  sortFn = this.onSort.bind(this);
+  get isCheckboxable(): boolean {
+    return this.column.headerCheckboxable;
+  }
+
   sortClass: string;
   sortDir: SortDirection;
-  selectFn = this.select.emit.bind(this.select);
 
-  cellContext: any;
+  cellContext: HeaderCellContext;
 
   private _column: TableColumn;
-  private _sorts: any[];
+  private _sorts: SortPropDir[];
 
-  constructor(private cd: ChangeDetectorRef) {
+  constructor() {
     this.cellContext = {
       column: this.column,
       sortDir: this.sortDir,
-      sortFn: this.sortFn,
+      sortFn: () => this.onSort(),
       allRowsSelected: this.allRowsSelected,
-      selectFn: this.selectFn
+      selectFn: () => this.select.emit()
     };
   }
 
@@ -179,24 +205,44 @@ export class DataTableHeaderCellComponent {
     this.columnContextmenu.emit({ event: $event, column: this.column });
   }
 
-  ngOnInit() {
-    this.sortClass = this.calcSortClass(this.sortDir);
+  @HostListener('keydown.enter')
+  enter(): void {
+    this.onSort();
   }
 
-  calcSortDir(sorts: any[]): any {
+  ngOnInit() {
+    this.sortClass = this.calcSortClass(this.sortDir);
+    // If there is already a default sort then start the counter with 1.
+    if (this.sortDir) {
+      this.totalSortStatesApplied = 1;
+    }
+  }
+
+  calcSortDir(sorts: SortPropDir[]): any {
     if (sorts && this.column) {
       const sort = sorts.find((s: any) => {
         return s.prop === this.column.prop;
       });
 
-      if (sort) return sort.dir;
+      if (sort) {
+        return sort.dir;
+      }
     }
   }
-
+  // Counter to reset sort once user sort asc and desc.
+  private totalSortStatesApplied = 0;
   onSort(): void {
-    if (!this.column.sortable) return;
+    if (!this.column.sortable) {
+      return;
+    }
 
-    const newValue = nextSortDir(this.sortType, this.sortDir);
+    this.totalSortStatesApplied++;
+    let newValue = nextSortDir(this.sortType, this.sortDir);
+    // User has done both direction sort so we reset the next sort.
+    if (this.enableClearingSortState && this.totalSortStatesApplied === 3) {
+      newValue = undefined;
+      this.totalSortStatesApplied = 0;
+    }
     this.sort.emit({
       column: this.column,
       prevValue: this.sortDir,
@@ -205,7 +251,9 @@ export class DataTableHeaderCellComponent {
   }
 
   calcSortClass(sortDir: SortDirection): string {
-    if (!this.cellContext.column.sortable) return;
+    if (!this.cellContext.column.sortable) {
+      return;
+    }
     if (sortDir === SortDirection.asc) {
       return `sort-btn sort-asc ${this.sortAscendingIcon}`;
     } else if (sortDir === SortDirection.desc) {

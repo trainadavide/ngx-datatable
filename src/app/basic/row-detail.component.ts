@@ -1,5 +1,6 @@
-import { Component, ViewEncapsulation, ViewChild } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Component, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ColumnMode, DatatableComponent } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { FullEmployee } from '../data.model';
 
 @Component({
   selector: 'row-details-demo',
@@ -68,7 +69,7 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         </ngx-datatable-column>
         <ngx-datatable-column name="Expanded" [width]="80">
           <ng-template let-row="row" let-expanded="expanded" ngx-datatable-cell-template>
-            <strong>{{ expanded === 1 }}</strong>
+            <strong>{{ expanded }}</strong>
           </ng-template>
         </ngx-datatable-column>
         <ngx-datatable-column name="Name" [width]="200">
@@ -85,12 +86,13 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
       </ngx-datatable>
     </div>
   `,
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  standalone: false
 })
 export class RowDetailsComponent {
-  @ViewChild('myTable') table: any;
+  @ViewChild('myTable') table: DatatableComponent<FullEmployee>;
 
-  rows: any[] = [];
+  rows: FullEmployee[] = [];
   expanded: any = {};
   timeout: any;
 

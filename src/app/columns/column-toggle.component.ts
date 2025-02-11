@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, TableColumn } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'column-toggle-demo',
@@ -25,23 +26,33 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
           [footerHeight]="50"
           rowHeight="auto"
         >
-          <ngx-datatable-column *ngFor="let col of columns" [name]="col.name"> </ngx-datatable-column>
+          @for (col of columns; track col) {
+          <ngx-datatable-column [name]="col.name"> </ngx-datatable-column>
+          }
         </ngx-datatable>
       </div>
       <div class="selected-column">
         <h4>Available Columns</h4>
         <ul>
-          <li *ngFor="let col of allColumns">
-            <input type="checkbox" [id]="col.name" (click)="toggle(col)" [checked]="isChecked(col)" />
+          @for (col of allColumns; track col) {
+          <li>
+            <input
+              type="checkbox"
+              [id]="col.name"
+              (click)="toggle(col)"
+              [checked]="isChecked(col)"
+            />
             <label [attr.for]="col.name">{{ col.name }}</label>
           </li>
+          }
         </ul>
       </div>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class ColumnToggleComponent {
-  rows = [
+  rows: Employee[] = [
     {
       name: 'Claudine Neal',
       gender: 'female',
@@ -54,13 +65,13 @@ export class ColumnToggleComponent {
     }
   ];
 
-  columns = [{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }];
+  columns: TableColumn[] = [{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }];
 
-  allColumns = [{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }];
+  allColumns: TableColumn[] = [{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }];
 
   ColumnMode = ColumnMode;
 
-  toggle(col) {
+  toggle(col: TableColumn) {
     const isChecked = this.isChecked(col);
 
     if (isChecked) {
@@ -72,11 +83,7 @@ export class ColumnToggleComponent {
     }
   }
 
-  isChecked(col) {
-    return (
-      this.columns.find(c => {
-        return c.name === col.name;
-      }) !== undefined
-    );
+  isChecked(col: TableColumn) {
+    return this.columns.find(c => c.name === col.name) !== undefined;
   }
 }

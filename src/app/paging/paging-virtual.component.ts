@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { MockServerResultsService } from './mock-server-results-service';
-import { CorporateEmployee } from './model/corporate-employee';
 import { Page } from './model/page';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
-import { delay } from 'rxjs/operators';
+import { Employee } from '../data.model';
 
 interface PageInfo {
   offset: number;
@@ -39,6 +38,7 @@ interface PageInfo {
         [columnMode]="ColumnMode.force"
         [headerHeight]="50"
         [loadingIndicator]="isLoading > 0"
+        [ghostLoadingIndicator]="isLoading > 0"
         [scrollbarV]="true"
         [footerHeight]="50"
         [rowHeight]="50"
@@ -48,15 +48,19 @@ interface PageInfo {
         [offset]="pageNumber"
         (page)="setPage($event)"
       >
+        <div loading-indicator class="custom-loading-indicator">loading...</div>
       </ngx-datatable>
     </div>
-  `
+  `,
+  styleUrls: ['./paging-virtual.component.scss'],
+  standalone: false
 })
 export class VirtualPagingComponent {
   totalElements: number;
   pageNumber: number;
-  rows: CorporateEmployee[];
-  cache: any = {};
+  rows: Employee[];
+  cache: Record<string, boolean> = {};
+  cachePageSize = 0;
 
   ColumnMode = ColumnMode;
 
@@ -77,16 +81,22 @@ export class VirtualPagingComponent {
     // This is the scroll position in rows
     const rowOffset = pageInfo.offset * pageInfo.pageSize;
 
-    // When calling the server, we keep page size fixed
-    // This should be the max UI pagesize or larger
-    // This is not necessary but helps simplify caching since the UI page size can change
-    const page = new Page();
-    page.size = 20;
-    page.pageNumber = Math.floor(rowOffset / page.size);
+    const page: Page = {
+      pageNumber: Math.floor(rowOffset / pageInfo.pageSize),
+      size: pageInfo.pageSize,
+      totalElements: 0,
+      totalPages: 0
+    };
 
     // We keep a index of server loaded pages so we don't load same data twice
     // This is based on the server page not the UI
-    if (this.cache[page.pageNumber]) return;
+    if (this.cachePageSize !== page.size) {
+      this.cachePageSize = page.size;
+      this.cache = {};
+    }
+    if (this.cache[page.pageNumber]) {
+      return;
+    }
     this.cache[page.pageNumber] = true;
 
     // Counter of pending API calls
@@ -99,7 +109,7 @@ export class VirtualPagingComponent {
       // Create array to store data if missing
       // The array should have the correct number of with "holes" for missing data
       if (!this.rows) {
-        this.rows = new Array<CorporateEmployee>(this.totalElements || 0);
+        this.rows = new Array<Employee>(this.totalElements || 0);
       }
 
       // Calc starting row offset

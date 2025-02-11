@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'default-sorting-demo',
@@ -24,6 +25,7 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         [footerHeight]="50"
         [rowHeight]="50"
         [scrollbarV]="true"
+        [enableClearingSortState]="true"
         [sorts]="[{ prop: 'name', dir: 'desc' }]"
       >
         <ngx-datatable-column name="Company">
@@ -41,10 +43,11 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         <ngx-datatable-column name="Gender"> </ngx-datatable-column>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class DefaultSortingComponent implements OnInit {
-  rows = [];
+  rows: Employee[] = [];
 
   ColumnMode = ColumnMode;
 

@@ -1,5 +1,5 @@
-import { Component, DebugElement, Input, Output, EventEmitter, ViewChild, TemplateRef } from '@angular/core';
-import { TestBed, ComponentFixture, waitForAsync } from '@angular/core/testing';
+import { Component, DebugElement, TemplateRef, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
 import { addMatchers } from '../../test';
@@ -80,7 +80,8 @@ describe('DataTableFooterComponent', () => {
       page.detectChangesAndRunQueries();
       const spy = spyOn(component, 'onPageEvent');
       const pageChangeEvent = { page: 7 };
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
       // mimic the act of changing the page through the datatable pager
       datatablePagerComponent.change.emit(pageChangeEvent);
 
@@ -90,7 +91,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent pagerLeftArrowIcon input', () => {
       component.pagerLeftArrowIcon = 'pager-left-arrow-icon';
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.pagerLeftArrowIcon).toBe(component.pagerLeftArrowIcon);
     });
@@ -98,7 +100,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent pagerRightArrowIcon input', () => {
       component.pagerRightArrowIcon = 'pager-right-arrow-icon';
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.pagerRightArrowIcon).toBe(component.pagerRightArrowIcon);
     });
@@ -106,7 +109,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent pagerNextIcon input', () => {
       component.pagerNextIcon = 'pager-next-icon';
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.pagerNextIcon).toBe(component.pagerNextIcon);
     });
@@ -114,7 +118,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent pagerPreviousIcon input', () => {
       component.pagerPreviousIcon = 'pager-previous-icon';
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.pagerPreviousIcon).toBe(component.pagerPreviousIcon);
     });
@@ -122,7 +127,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent size input', () => {
       component.pageSize = 4;
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.size).toBe(component.pageSize);
     });
@@ -130,7 +136,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent count input', () => {
       component.rowCount = 40;
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.count).toBe(component.rowCount);
     });
@@ -138,7 +145,8 @@ describe('DataTableFooterComponent', () => {
     it('should bind to DataTablePagerComponent page input', () => {
       component.offset = 200;
       page.detectChangesAndRunQueries();
-      const datatablePagerComponent: DataTablePagerComponent = page.datatablePager.componentInstance;
+      const datatablePagerComponent: DataTablePagerComponent =
+        page.datatablePager.componentInstance;
 
       expect(datatablePagerComponent.page).toBe(201);
     });
@@ -148,13 +156,19 @@ describe('DataTableFooterComponent', () => {
       component.pageSize = 5;
       page.detectChangesAndRunQueries();
 
-      expect(page.datatablePager.nativeElement.hidden).toBe(false, 'DataTablePagerComponent should be hidden');
+      expect(page.datatablePager.nativeElement.hidden).toBe(
+        false,
+        'DataTablePagerComponent should be hidden'
+      );
 
       component.rowCount = 1;
       component.pageSize = 2;
       page.detectChangesAndRunQueries();
 
-      expect(page.datatablePager.nativeElement.hidden).toBe(true, 'DataTablePagerComponent should not be hidden');
+      expect(page.datatablePager.nativeElement.hidden).toBe(
+        true,
+        'DataTablePagerComponent should not be hidden'
+      );
     });
   });
 
@@ -232,7 +246,8 @@ describe('DataTableFooterComponent', () => {
         <li>offset {{ offset }}</li>
       </ul>
     </ng-template>
-  `
+  `,
+  imports: [DataTableFooterComponent]
 })
 class TestFixtureComponent {
   footerHeight: number;
@@ -261,29 +276,9 @@ class TestFixtureComponent {
   }
 }
 
-/**
- * we use a mock DataTablePagerComponent when testing
- * the DataTableFooterComponent
- */
-@Component({
-  selector: 'datatable-pager',
-  template: ''
-})
-class DataTablePagerComponentMock {
-  @Input() pagerLeftArrowIcon: string;
-  @Input() pagerRightArrowIcon: string;
-  @Input() pagerPreviousIcon: string;
-  @Input() pagerNextIcon: string;
-  @Input() page: number;
-  @Input() size: number;
-  @Input() count: number;
-
-  @Output() change: EventEmitter<any> = new EventEmitter();
-}
-
 function setupTest() {
   return TestBed.configureTestingModule({
-    declarations: [TestFixtureComponent, DataTableFooterComponent, DataTablePagerComponentMock]
+    imports: [TestFixtureComponent]
   })
     .compileComponents()
     .then(() => {

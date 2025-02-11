@@ -1,8 +1,15 @@
-import { Directive, TemplateRef } from '@angular/core';
+import { Directive } from '@angular/core';
+import { GroupContext } from '../../types/public.types';
 
 @Directive({
-  selector: '[ngx-datatable-group-header-template]'
+  selector: '[ngx-datatable-group-header-template]',
+  standalone: true
 })
 export class DatatableGroupHeaderTemplateDirective {
-  constructor(public template: TemplateRef<any>) {}
+  static ngTemplateContextGuard(
+    directive: DatatableGroupHeaderTemplateDirective,
+    context: unknown
+  ): context is GroupContext {
+    return true;
+  }
 }

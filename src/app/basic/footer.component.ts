@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, TableColumn } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'footer-demo',
@@ -25,7 +26,7 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
         [headerHeight]="50"
         rowHeight="auto"
       >
-        <ngx-datatable-footer *ngIf="true">
+        <ngx-datatable-footer>
           <ng-template
             ngx-datatable-footer-template
             let-rowCount="rowCount"
@@ -37,18 +38,22 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
             <div style="padding: 5px 10px">
               <div><strong>Summary</strong>: Gender: Female</div>
               <hr style="width:100%" />
-              <div>Rows: {{ rowCount }} | Size: {{ pageSize }} | Current: {{ curPage }} | Offset: {{ offset }}</div>
+              <div
+                >Rows: {{ rowCount }} | Size: {{ pageSize }} | Current: {{ curPage }} | Offset:
+                {{ offset }}</div
+              >
             </div>
           </ng-template>
         </ngx-datatable-footer>
       </ngx-datatable>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class FooterDemoComponent {
-  rows = [];
+  rows: Employee[] = [];
 
-  columns = [{ prop: 'name' }, { name: 'Gender' }, { name: 'Company' }];
+  columns: TableColumn[] = [{ prop: 'name' }, { name: 'Gender' }, { name: 'Company' }];
 
   ColumnMode = ColumnMode;
 

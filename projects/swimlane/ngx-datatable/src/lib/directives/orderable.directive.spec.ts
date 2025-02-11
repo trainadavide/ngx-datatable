@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { Component, ElementRef } from '@angular/core';
+import { Component, QueryList, ViewChildren } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
 import { OrderableDirective } from './orderable.directive';
@@ -8,44 +8,51 @@ import { id } from '../utils/id';
 
 @Component({
   selector: 'test-fixture-component',
-  template: ` <div orderable></div> `
+  template: `
+    <div orderable>
+      @for (item of draggables; track $index) {
+      <div draggable [dragModel]="item"></div>
+      }
+    </div>
+  `,
+  imports: [OrderableDirective, DraggableDirective]
 })
-class TestFixtureComponent {}
+class TestFixtureComponent {
+  draggables = [];
+  @ViewChildren(DraggableDirective) draggableDirectives!: QueryList<DraggableDirective>;
+}
 
 describe('OrderableDirective', () => {
   let fixture: ComponentFixture<TestFixtureComponent>;
   let component: TestFixtureComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [OrderableDirective, TestFixtureComponent]
+      imports: [OrderableDirective, TestFixtureComponent, DraggableDirective]
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(TestFixtureComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-
-        /* This is required in order to resolve the `ContentChildren`.
-         *  If we don't go through at least on change detection cycle
-         *  the `draggables` will be `undefined` and `ngOnDestroy` will
-         *  fail.
-         */
-        fixture.detectChanges();
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(TestFixtureComponent);
+      component = fixture.componentInstance;
+      /* This is required in order to resolve the `ContentChildren`.
+       *  If we don't go through at least on change detection cycle
+       *  the `draggables` will be `undefined` and `ngOnDestroy` will
+       *  fail.
+       */
+      fixture.detectChanges();
+    });
+  }));
 
   describe('fixture', () => {
     let directive: OrderableDirective;
 
     beforeEach(() => {
-      directive = fixture.debugElement.query(By.directive(OrderableDirective)).injector.get(OrderableDirective);
+      directive = fixture.debugElement
+        .query(By.directive(OrderableDirective))
+        .injector.get(OrderableDirective);
     });
 
     it('should have a component instance', () => {
@@ -75,40 +82,25 @@ describe('OrderableDirective', () => {
       }
 
       function newDraggable() {
-        // tslint:disable-next-line: no-object-literal-type-assertion
-        const draggable = new DraggableDirective(<ElementRef>{});
-
-        // used for the KeyValueDiffer
-        draggable.dragModel = {
+        return {
           $$id: id()
         };
-
-        return draggable;
       }
 
-      let draggables: DraggableDirective[];
-
       beforeEach(() => {
-        draggables = [newDraggable(), newDraggable(), newDraggable()];
-
-        directive.draggables.reset(draggables);
-
-        directive.updateSubscriptions();
+        component.draggables = [newDraggable(), newDraggable(), newDraggable()];
+        fixture.detectChanges();
 
         checkAllSubscriptionsForActiveObservers();
       });
 
       it('then dragStart and dragEnd are unsubscribed from the removed draggable', () => {
-        const unsubbed = draggables.splice(0, 1)[0];
+        const unsubbed = component.draggableDirectives.toArray()[0];
+        component.draggables.splice(0, 1);
 
         expect(unsubbed.dragStart.isStopped).toBe(false);
         expect(unsubbed.dragEnd.isStopped).toBe(false);
-
-        directive.draggables.reset(draggables);
-
-        directive.updateSubscriptions();
-
-        checkAllSubscriptionsForActiveObservers();
+        fixture.detectChanges();
 
         expect(unsubbed.dragStart.isStopped).toBe(true);
         expect(unsubbed.dragEnd.isStopped).toBe(true);

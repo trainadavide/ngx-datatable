@@ -1,18 +1,16 @@
 import {
+  ChangeDetectionStrategy,
   Component,
-  Input,
   ElementRef,
-  Output,
   EventEmitter,
-  Renderer2,
-  NgZone,
-  OnInit,
-  OnDestroy,
   HostBinding,
-  ChangeDetectionStrategy
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  Renderer2
 } from '@angular/core';
-
-import { MouseEvent } from '../../events';
 
 @Component({
   selector: 'datatable-scroller',
@@ -20,11 +18,14 @@ import { MouseEvent } from '../../events';
   host: {
     class: 'datatable-scroll'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class ScrollerComponent implements OnInit, OnDestroy {
-  @Input() scrollbarV: boolean = false;
-  @Input() scrollbarH: boolean = false;
+  private renderer = inject(Renderer2);
+
+  @Input() scrollbarV = false;
+  @Input() scrollbarH = false;
 
   @HostBinding('style.height.px')
   @Input()
@@ -36,19 +37,14 @@ export class ScrollerComponent implements OnInit, OnDestroy {
 
   @Output() scroll: EventEmitter<any> = new EventEmitter();
 
-  scrollYPos: number = 0;
-  scrollXPos: number = 0;
-  prevScrollYPos: number = 0;
-  prevScrollXPos: number = 0;
-  element: any;
-  parentElement: any;
-  onScrollListener: any;
+  scrollYPos = 0;
+  scrollXPos = 0;
+  prevScrollYPos = 0;
+  prevScrollXPos = 0;
+  element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  parentElement: HTMLElement;
 
   private _scrollEventListener: any = null;
-
-  constructor(private ngZone: NgZone, element: ElementRef, private renderer: Renderer2) {
-    this.element = element.nativeElement;
-  }
 
   ngOnInit(): void {
     // manual bind so we don't always listen

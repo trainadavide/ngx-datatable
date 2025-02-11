@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Employee } from '../data.model';
 
 @Component({
   selector: 'chkbox-selection-demo',
@@ -59,18 +60,22 @@ import { ColumnMode, SelectionType } from 'projects/swimlane/ngx-datatable/src/p
           Selections <small>({{ selected?.length }})</small>
         </h4>
         <ul>
-          <li *ngFor="let sel of selected">
+          @for (sel of selected; track sel) {
+          <li>
             {{ sel.name }}
           </li>
-          <li *ngIf="!selected?.length">No Selections</li>
+          } @if (!selected?.length) {
+          <li>No Selections</li>
+          }
         </ul>
       </div>
     </div>
-  `
+  `,
+  standalone: false
 })
 export class CheckboxSelectionComponent {
-  rows = [];
-  selected = [];
+  rows: Employee[] = [];
+  selected: Employee[] = [];
 
   ColumnMode = ColumnMode;
   SelectionType = SelectionType;

@@ -1,5 +1,6 @@
-import { Component, ViewEncapsulation, ViewChild } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { Component, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ColumnMode, DatatableComponent } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { FullEmployee } from '../data.model';
 
 @Component({
   selector: 'responsive-demo',
@@ -106,17 +107,18 @@ import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
     </div>
 
     <div style="margin: 50px;">
-      This demo combines the features used in the <i>Row Detail</i> Rows demo, <i>Flex</i> Column demo, and the
-      <i>Inline</i> Templates demo. When your browser is at 800px, the gender and age columns will be hidden and will
-      appear in the row detail view.
+      This demo combines the features used in the <i>Row Detail</i> Rows demo, <i>Flex</i> Column
+      demo, and the <i>Inline</i> Templates demo. When your browser is at 800px, the gender and age
+      columns will be hidden and will appear in the row detail view.
     </div>
   `,
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  standalone: false
 })
 export class ResponsiveComponent {
-  @ViewChild('myTable') table: any;
+  @ViewChild('myTable') table: DatatableComponent<FullEmployee>;
 
-  rows: any[] = [];
+  rows: FullEmployee[] = [];
   expanded: any = {};
   timeout: any;
 

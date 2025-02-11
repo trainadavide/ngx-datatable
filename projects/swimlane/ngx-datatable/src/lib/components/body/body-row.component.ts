@@ -1,37 +1,43 @@
 import {
-  Component,
-  Input,
-  HostBinding,
-  ElementRef,
-  Output,
-  KeyValueDiffers,
-  KeyValueDiffer,
-  EventEmitter,
-  HostListener,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  Component,
   DoCheck,
-  SkipSelf
+  ElementRef,
+  EventEmitter,
+  HostBinding,
+  HostListener,
+  inject,
+  Input,
+  KeyValueDiffer,
+  KeyValueDiffers,
+  OnChanges,
+  Output,
+  SimpleChanges
 } from '@angular/core';
 
-import { TreeStatus } from './body-cell.component';
-import { columnsByPin, columnGroupWidths, columnsByPinArr } from '../../utils/column';
+import { columnGroupWidths, columnsByPin, columnsByPinArr } from '../../utils/column';
 import { Keys } from '../../utils/keys';
-import { ScrollbarHelper } from '../../services/scrollbar-helper.service';
-import { translateXY } from '../../utils/translate';
+import { BehaviorSubject } from 'rxjs';
+import { ActivateEvent, RowOrGroup, TreeStatus } from '../../types/public.types';
+import { AsyncPipe } from '@angular/common';
+import { TableColumn } from '../../types/table-column.type';
+import { ColumnGroupWidth, PinnedColumns } from '../../types/internal.types';
+import { DataTableBodyCellComponent } from './body-cell.component';
 
 @Component({
   selector: 'datatable-body-row',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @for (colGroup of _columnsByPin; track colGroup.type; let i = $index) {
     <div
-      *ngFor="let colGroup of _columnsByPin; let i = index; trackBy: trackByGroups"
       class="datatable-row-{{ colGroup.type }} datatable-row-group"
-      [ngStyle]="_groupStyles[colGroup.type]"
+      [style.width.px]="_columnGroupWidths[colGroup.type]"
+      [class.row-disabled]="disable$ ? (disable$ | async) : false"
     >
+      @for (column of colGroup.columns; track column.$$id; let ii = $index) {
       <datatable-body-cell
         role="cell"
-        *ngFor="let column of colGroup.columns; let ii = index; trackBy: columnTrackingFn"
         tabindex="-1"
         [row]="row"
         [group]="group"
@@ -41,22 +47,28 @@ import { translateXY } from '../../utils/translate';
         [column]="column"
         [rowHeight]="rowHeight"
         [displayCheck]="displayCheck"
+        [disable$]="disable$"
         [treeStatus]="treeStatus"
+        [ghostLoadingIndicator]="ghostLoadingIndicator"
         (activate)="onActivate($event, ii)"
         (treeAction)="onTreeAction()"
       >
       </datatable-body-cell>
+      }
     </div>
-  `
+    }
+  `,
+  imports: [DataTableBodyCellComponent, AsyncPipe]
 })
-export class DataTableBodyRowComponent implements DoCheck {
-  @Input() set columns(val: any[]) {
+export class DataTableBodyRowComponent<TRow = any> implements DoCheck, OnChanges {
+  private cd = inject(ChangeDetectorRef);
+
+  @Input() set columns(val: TableColumn[]) {
     this._columns = val;
     this.recalculateColumns(val);
-    this.buildStylesByGroup();
   }
 
-  get columns(): any[] {
+  get columns(): TableColumn[] {
     return this._columns;
   }
 
@@ -68,7 +80,6 @@ export class DataTableBodyRowComponent implements DoCheck {
 
     this._innerWidth = val;
     this.recalculateColumns();
-    this.buildStylesByGroup();
   }
 
   get innerWidth(): number {
@@ -76,18 +87,20 @@ export class DataTableBodyRowComponent implements DoCheck {
   }
 
   @Input() expanded: boolean;
-  @Input() rowClass: any;
-  @Input() row: any;
-  @Input() group: any;
+  @Input() rowClass?: (row: RowOrGroup<TRow>) => string | Record<string, boolean>;
+  @Input() row: TRow;
+  @Input() group: TRow[];
   @Input() isSelected: boolean;
   @Input() rowIndex: number;
-  @Input() displayCheck: any;
-  @Input() treeStatus: TreeStatus = 'collapsed';
+  @Input() displayCheck: (row: TRow, column: TableColumn, value?: any) => boolean;
+  @Input() treeStatus?: TreeStatus = 'collapsed';
+  @Input() ghostLoadingIndicator = false;
+  @Input() verticalScrollVisible = false;
 
+  @Input() disable$: BehaviorSubject<boolean>;
   @Input()
   set offsetX(val: number) {
     this._offsetX = val;
-    this.buildStylesByGroup();
   }
   get offsetX() {
     return this._offsetX;
@@ -104,6 +117,9 @@ export class DataTableBodyRowComponent implements DoCheck {
     }
     if (this.rowIndex % 2 === 0) {
       cls += ' datatable-row-even';
+    }
+    if (this.disable$ && this.disable$.value) {
+      cls += ' row-disabled';
     }
 
     if (this.rowClass) {
@@ -128,35 +144,28 @@ export class DataTableBodyRowComponent implements DoCheck {
   rowHeight: number;
 
   @HostBinding('style.width.px')
-  get columnsTotalWidths(): string {
+  get columnsTotalWidths(): number {
     return this._columnGroupWidths.total;
   }
 
-  @Output() activate: EventEmitter<any> = new EventEmitter();
+  @Output() activate: EventEmitter<ActivateEvent<TRow>> = new EventEmitter();
   @Output() treeAction: EventEmitter<any> = new EventEmitter();
 
-  _element: any;
-  _columnGroupWidths: any;
-  _columnsByPin: any;
+  _element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  _columnGroupWidths: ColumnGroupWidth;
+  _columnsByPin: PinnedColumns[];
   _offsetX: number;
-  _columns: any[];
+  _columns: TableColumn[];
   _innerWidth: number;
-  _groupStyles: { [prop: string]: {} } = {
-    left: {},
-    center: {},
-    right: {}
-  };
 
-  private _rowDiffer: KeyValueDiffer<{}, {}>;
+  private _rowDiffer: KeyValueDiffer<keyof RowOrGroup<TRow>, any> = inject(KeyValueDiffers)
+    .find({})
+    .create();
 
-  constructor(
-    private differs: KeyValueDiffers,
-    @SkipSelf() private scrollbarHelper: ScrollbarHelper,
-    private cd: ChangeDetectorRef,
-    element: ElementRef
-  ) {
-    this._element = element.nativeElement;
-    this._rowDiffer = differs.find({}).create();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.verticalScrollVisible) {
+      this.recalculateColumns();
+    }
   }
 
   ngDoCheck(): void {
@@ -165,43 +174,7 @@ export class DataTableBodyRowComponent implements DoCheck {
     }
   }
 
-  trackByGroups(index: number, colGroup: any): any {
-    return colGroup.type;
-  }
-
-  columnTrackingFn(index: number, column: any): any {
-    return column.$$id;
-  }
-
-  buildStylesByGroup() {
-    this._groupStyles.left = this.calcStylesByGroup('left');
-    this._groupStyles.center = this.calcStylesByGroup('center');
-    this._groupStyles.right = this.calcStylesByGroup('right');
-    this.cd.markForCheck();
-  }
-
-  calcStylesByGroup(group: string) {
-    const widths = this._columnGroupWidths;
-    const offsetX = this.offsetX;
-
-    const styles = {
-      width: `${widths[group]}px`
-    };
-
-    if (group === 'left') {
-      translateXY(styles, offsetX, 0);
-    } else if (group === 'right') {
-      const bodyWidth = parseInt(this.innerWidth + '', 0);
-      const totalDiff = widths.total - bodyWidth;
-      const offsetDiff = totalDiff - offsetX;
-      const offset = (offsetDiff + this.scrollbarHelper.width) * -1;
-      translateXY(styles, offset, 0);
-    }
-
-    return styles;
-  }
-
-  onActivate(event: any, index: number): void {
+  onActivate(event: ActivateEvent<TRow>, index: number): void {
     event.cellIndex = index;
     event.rowElement = this._element;
     this.activate.emit(event);
@@ -209,17 +182,19 @@ export class DataTableBodyRowComponent implements DoCheck {
 
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    const keyCode = event.keyCode;
+    const key = event.key;
     const isTargetRow = event.target === this._element;
 
     const isAction =
-      keyCode === Keys.return ||
-      keyCode === Keys.down ||
-      keyCode === Keys.up ||
-      keyCode === Keys.left ||
-      keyCode === Keys.right;
+      key === Keys.return ||
+      key === Keys.down ||
+      key === Keys.up ||
+      key === Keys.left ||
+      key === Keys.right;
 
-    if (isAction && isTargetRow) {
+    const isCtrlA = event.key === 'a' && (event.ctrlKey || event.metaKey);
+
+    if ((isAction && isTargetRow) || isCtrlA) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -233,7 +208,7 @@ export class DataTableBodyRowComponent implements DoCheck {
   }
 
   @HostListener('mouseenter', ['$event'])
-  onMouseenter(event: any): void {
+  onMouseenter(event: MouseEvent): void {
     this.activate.emit({
       type: 'mouseenter',
       event,
@@ -242,7 +217,7 @@ export class DataTableBodyRowComponent implements DoCheck {
     });
   }
 
-  recalculateColumns(val: any[] = this.columns): void {
+  recalculateColumns(val: TableColumn<TRow>[] = this.columns): void {
     this._columns = val;
     const colsByPin = columnsByPin(this._columns);
     this._columnsByPin = columnsByPinArr(this._columns);

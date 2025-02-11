@@ -1,11 +1,14 @@
 import { getterForProp } from './column-prop-getters';
-import { SortType } from '../types/sort.type';
-import { SortDirection } from '../types/sort-direction.type';
-import { SortPropDir } from '../types/sort-prop-dir.type';
+import { Group, SortDirection, SortPropDir, SortType } from '../types/public.types';
+import { TableColumn } from '../types/table-column.type';
+
 /**
  * Gets the next sort direction
  */
-export function nextSortDir(sortType: SortType, current: SortDirection): SortDirection | undefined {
+export function nextSortDir(
+  sortType: SortType,
+  current: SortDirection | 'desc' | 'asc'
+): SortDirection | undefined {
   if (sortType === SortType.single) {
     if (current === SortDirection.asc) {
       return SortDirection.desc;
@@ -30,22 +33,38 @@ export function nextSortDir(sortType: SortType, current: SortDirection): SortDir
  * https://github.com/FuelInteractive/fuel-ui/tree/master/src/pipes/OrderBy
  */
 export function orderByComparator(a: any, b: any): number {
-  if (a === null || typeof a === 'undefined') a = 0;
-  if (b === null || typeof b === 'undefined') b = 0;
+  if (a === null || typeof a === 'undefined') {
+    a = 0;
+  }
+  if (b === null || typeof b === 'undefined') {
+    b = 0;
+  }
   if (a instanceof Date && b instanceof Date) {
-    if (a < b) return -1;
-    if (a > b) return 1;
+    if (a < b) {
+      return -1;
+    }
+    if (a > b) {
+      return 1;
+    }
   } else if (isNaN(parseFloat(a)) || !isFinite(a) || isNaN(parseFloat(b)) || !isFinite(b)) {
     // Convert to string in case of a=0 or b=0
     a = String(a);
     b = String(b);
     // Isn't a number so lowercase the string to properly compare
-    if (a.toLowerCase() < b.toLowerCase()) return -1;
-    if (a.toLowerCase() > b.toLowerCase()) return 1;
+    if (a.toLowerCase() < b.toLowerCase()) {
+      return -1;
+    }
+    if (a.toLowerCase() > b.toLowerCase()) {
+      return 1;
+    }
   } else {
     // Parse strings as numbers to compare properly
-    if (parseFloat(a) < parseFloat(b)) return -1;
-    if (parseFloat(a) > parseFloat(b)) return 1;
+    if (parseFloat(a) < parseFloat(b)) {
+      return -1;
+    }
+    if (parseFloat(a) > parseFloat(b)) {
+      return 1;
+    }
   }
 
   // equal each other
@@ -56,9 +75,13 @@ export function orderByComparator(a: any, b: any): number {
  * creates a shallow copy of the `rows` input and returns the sorted copy. this function
  * does not sort the `rows` argument in place
  */
-export function sortRows(rows: any[], columns: any[], dirs: SortPropDir[]): any[] {
-  if (!rows) return [];
-  if (!dirs || !dirs.length || !columns) return [...rows];
+export function sortRows<TRow>(rows: TRow[], columns: TableColumn[], dirs: SortPropDir[]): TRow[] {
+  if (!rows) {
+    return [];
+  }
+  if (!dirs || !dirs.length || !columns) {
+    return [...rows];
+  }
 
   /**
    * record the row ordering of results from prior sort operations (if applicable)
@@ -108,14 +131,35 @@ export function sortRows(rows: any[], columns: any[], dirs: SortPropDir[]): any[
           : -cachedDir.compareFn(propA, propB, rowA, rowB, cachedDir.dir);
 
       // Don't return 0 yet in case of needing to sort by next property
-      if (comparison !== 0) return comparison;
+      if (comparison !== 0) {
+        return comparison;
+      }
     }
 
-    if (!(rowToIndexMap.has(rowA) && rowToIndexMap.has(rowB))) return 0;
+    if (!(rowToIndexMap.has(rowA) && rowToIndexMap.has(rowB))) {
+      return 0;
+    }
 
     /**
      * all else being equal, preserve original order of the rows (stable sort)
      */
     return rowToIndexMap.get(rowA) < rowToIndexMap.get(rowB) ? -1 : 1;
   });
+}
+
+export function sortGroupedRows<TRow>(
+  groupedRows: Group<TRow>[],
+  columns: TableColumn[],
+  dirs: SortPropDir[],
+  sortOnGroupHeader: SortPropDir
+): Group<TRow>[] {
+  if (sortOnGroupHeader) {
+    groupedRows = sortRows(groupedRows, columns, [
+      {
+        dir: sortOnGroupHeader.dir,
+        prop: 'key'
+      }
+    ]);
+  }
+  return groupedRows.map(group => ({ ...group, value: sortRows(group.value, columns, dirs) }));
 }

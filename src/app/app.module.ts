@@ -9,12 +9,12 @@ import { BasicFixedComponent } from './basic/basic-fixed.component';
 import { BasicAutoComponent } from './basic/basic-auto.component';
 import { VirtualScrollComponent } from './basic/virtual.component';
 import { InlineEditComponent } from './basic/inline.component';
-import { HorzVertScrolling } from './basic/scrolling.component';
+import { HorzVertScrollingComponent } from './basic/scrolling.component';
 import { MultipleTablesComponent } from './basic/multiple.component';
 import { FullScreenComponent } from './basic/fullscreen.component';
 import { RowDetailsComponent } from './basic/row-detail.component';
 import { ResponsiveComponent } from './basic/responsive.component';
-import { FilterBarComponent } from './basic/filter.component';
+import { FilterComponent } from './basic/filter.component';
 import { TabsDemoComponent } from './basic/tabs.component';
 import { LiveDataComponent } from './basic/live.component';
 import { RxDemoComponent } from './basic/rx.component';
@@ -23,6 +23,8 @@ import { RowCssComponent } from './basic/css.component';
 import { DynamicHeightComponent } from './basic/dynamic-height.component';
 import { FooterDemoComponent } from './basic/footer.component';
 import { RowGroupingComponent } from './basic/row-grouping.component';
+import { BasicEmptyComponent } from './basic/empty.component';
+import { DisabledRowsComponent } from './basic/disabled-rows.component';
 
 // -- Themes
 import { BootstrapThemeComponent } from './basic/bootstrap.component';
@@ -56,6 +58,7 @@ import { SingleSelectionComponent } from './selection/selection-single.component
 import { MultiDisableSelectionComponent } from './selection/selection-disabled.component';
 import { CheckboxSelectionComponent } from './selection/selection-chkbox.component';
 import { MultiClickSelectionComponent } from './selection/selection-multi-click.component';
+import { MultiClickCheckboxSelectionComponent } from './selection/selection-multi-click-chkbox.component';
 import { CustomCheckboxSelectionComponent } from './selection/selection-chkbox-template.component';
 
 // -- Columns
@@ -73,17 +76,22 @@ import { SummaryRowServerPagingComponent } from './summary/summary-row-server-pa
 import { SummaryRowInlineHtmlComponent } from './summary/summary-row-inline-html.component';
 import { AppRoutingModule } from './app-routing.module';
 import { CommonModule } from '@angular/common';
+import { ScrollingDynamicallyComponent } from './basic/scrolling-dynamically.component';
+import { DragDropComponent } from './drag-drop/drag-drop.component';
 
+import { DragDropModule } from '@angular/cdk/drag-drop';
 @NgModule({
   declarations: [
     AppComponent,
     BasicAutoComponent,
     BasicFixedComponent,
+    DragDropComponent,
     FullScreenComponent,
     FullScreenTreeComponent,
     InlineEditComponent,
     VirtualScrollComponent,
-    HorzVertScrolling,
+    HorzVertScrollingComponent,
+    ScrollingDynamicallyComponent,
     MultipleTablesComponent,
     RowDetailsComponent,
     ResponsiveComponent,
@@ -97,6 +105,7 @@ import { CommonModule } from '@angular/common';
     SortingComparatorComponent,
     CellSelectionComponent,
     MultiSelectionComponent,
+    MultiClickCheckboxSelectionComponent,
     InlineTemplatesComponent,
     TemplateRefTemplatesComponent,
     ColumnFlexComponent,
@@ -105,7 +114,7 @@ import { CommonModule } from '@angular/common';
     ColumnForceComponent,
     ColumnPinningComponent,
     ColumnReorderComponent,
-    FilterBarComponent,
+    FilterComponent,
     VirtualPagingComponent,
     DarkThemeComponent,
     TabsDemoComponent,
@@ -121,17 +130,20 @@ import { CommonModule } from '@angular/common';
     DynamicHeightComponent,
     FooterDemoComponent,
     RowGroupingComponent,
+    BasicEmptyComponent,
     BootstrapThemeComponent,
     ClientTreeComponent,
     SummaryRowSimpleComponent,
     SummaryRowCustomTemplateComponent,
     SummaryRowServerPagingComponent,
-    SummaryRowInlineHtmlComponent
+    SummaryRowInlineHtmlComponent,
+    DisabledRowsComponent
   ],
   imports: [
     CommonModule,
     BrowserModule,
     AppRoutingModule,
+    DragDropModule,
     NgxDatatableModule.forRoot({
       messages: {
         emptyMessage: 'No data to display', // Message to show when array is presented, but contains no values

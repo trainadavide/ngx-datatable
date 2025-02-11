@@ -1,4 +1,4 @@
-import { TestBed, ComponentFixture, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
@@ -13,7 +13,8 @@ import { DataTableColumnDirective } from './column.directive';
       <ng-template></ng-template>
       <ng-template></ng-template>
     </ngx-datatable-column>
-  `
+  `,
+  imports: [DataTableColumnDirective]
 })
 class TestFixtureComponent {
   columnName: string;
@@ -22,12 +23,11 @@ class TestFixtureComponent {
 describe('DataTableColumnDirective', () => {
   let fixture: ComponentFixture<TestFixtureComponent>;
   let component: TestFixtureComponent;
-  let element;
 
   // provide our implementations or mocks to the dependency injector
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [DataTableColumnDirective, TestFixtureComponent],
+      imports: [DataTableColumnDirective, TestFixtureComponent],
       providers: [
         {
           provide: ColumnChangesService,
@@ -39,18 +39,15 @@ describe('DataTableColumnDirective', () => {
     });
   });
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.compileComponents().then(() => {
-        fixture = TestBed.createComponent(TestFixtureComponent);
-        component = fixture.componentInstance;
-        element = fixture.nativeElement;
-      });
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.compileComponents().then(() => {
+      fixture = TestBed.createComponent(TestFixtureComponent);
+      component = fixture.componentInstance;
+    });
+  }));
 
   describe('fixture', () => {
-    let directive: DataTableColumnDirective;
+    let directive: DataTableColumnDirective<unknown>;
 
     beforeEach(() => {
       directive = fixture.debugElement
@@ -68,7 +65,7 @@ describe('DataTableColumnDirective', () => {
   });
 
   describe('directive #1', () => {
-    let directive: DataTableColumnDirective;
+    let directive: DataTableColumnDirective<unknown>;
 
     beforeEach(() => {
       directive = fixture.debugElement.query(By.css('#t1')).injector.get(DataTableColumnDirective);
@@ -99,7 +96,7 @@ describe('DataTableColumnDirective', () => {
   });
 
   describe('directive #2', () => {
-    let directive: DataTableColumnDirective;
+    let directive: DataTableColumnDirective<unknown>;
 
     beforeEach(() => {
       directive = fixture.debugElement.query(By.css('#t2')).injector.get(DataTableColumnDirective);

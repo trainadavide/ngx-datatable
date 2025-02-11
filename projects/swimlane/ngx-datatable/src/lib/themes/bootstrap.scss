@@ -1,6 +1,18 @@
-/*
-bootstrap table theme
-*/
+$datatable-ghost-cell-container-background: #fff !default;
+
+$datatable-ghost-cell-strip-background: #dee2e5 !default;
+$datatable-ghost-cell-strip-background-image: linear-gradient(
+  to right,
+  $datatable-ghost-cell-strip-background 0%,
+  $datatable-ghost-cell-strip-background 10%,
+  #fff,
+  transparent
+) !default;
+$datatable-ghost-cell-strip-radius: 0 !default;
+$datatble-ghost-cell-animation-duration: 10s;
+
+@import './ghost';
+@import './rows';
 
 .ngx-datatable.bootstrap {
   box-shadow: none;
@@ -8,6 +20,7 @@ bootstrap table theme
   .datatable-header {
     height: unset !important;
     .datatable-header-cell {
+      flex-shrink: 0;
       vertical-align: bottom;
       padding: 0.75rem;
       border-bottom: 1px solid #d1d4d7;
@@ -28,6 +41,7 @@ bootstrap table theme
         color: #fff;
       }
       .datatable-body-cell {
+        flex-shrink: 0;
         padding: 0.75rem;
         text-align: left;
         vertical-align: top;
@@ -39,6 +53,16 @@ bootstrap table theme
       position: relative;
       padding: $alert-padding-y $alert-padding-x;
       margin-bottom: 0;
+    }
+    .custom-loading-indicator-wrapper {
+      position: sticky;
+      top: 0;
+      height: 0;
+      z-index: 999;
+      .custom-loading-content {
+        width: 100%;
+        background-color: #fff;
+      }
     }
   }
   .datatable-footer {
