@@ -2,6 +2,8 @@
 
 ## HEAD (unreleased)
 
+## 21.1.0
+
 - Fix: Prevent browser page crash when user inputs large Arrays
 
 ## 21.0.0
