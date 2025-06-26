@@ -18,6 +18,7 @@ import { Employee } from '../data.model';
         </small>
       </h3>
       <ngx-datatable
+        [topPaging]="true"
         class="material"
         [rows]="rows"
         [columns]="[{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }]"

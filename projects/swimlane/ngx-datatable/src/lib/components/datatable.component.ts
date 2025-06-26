@@ -103,6 +103,16 @@ export class DatatableComponent<TRow = any>
   private configuration = inject<INgxDatatableConfig>('configuration' as any, { optional: true });
 
   /**
+   * If flagged, it shows the pager at the top of the datatable.
+   */
+  @Input() topPaging: boolean = false;
+
+  /**
+   * If flagged, it shows the pager at the bottom of the datatable.
+   */
+  @Input() bottomPaging: boolean = true;
+
+  /**
    * Template for the target marker of drag target columns.
    */
   @Input() targetMarkerTemplate: TemplateRef<unknown>;
