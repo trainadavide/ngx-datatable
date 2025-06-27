@@ -21,6 +21,8 @@ import { Employee } from '../data.model';
         </small>
       </h3>
       <ngx-datatable
+        [pageSizeSelector]="true"
+        [topPaging]="true"
         class="material"
         [rows]="rows"
         [columns]="[{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }]"
@@ -62,6 +64,9 @@ export class ServerPagingComponent implements OnInit {
    */
   setPage(pageInfo) {
     this.page.pageNumber = pageInfo.offset;
+    if (pageInfo.pageSize) {
+      this.page.size = pageInfo.pageSize;
+    }
     this.serverResultsService.getResults(this.page).subscribe(pagedData => {
       this.page = pagedData.page;
       this.rows = pagedData.data;

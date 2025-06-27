@@ -126,6 +126,10 @@ export interface PagerPageEvent {
   page: number;
 }
 
+export interface PagerSizeEvent {
+  size: number;
+}
+
 export interface ColumnResizeEvent {
   column: TableColumn;
   prevValue: number;

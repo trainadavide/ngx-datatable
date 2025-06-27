@@ -55,6 +55,7 @@ import {
   Group,
   PageEvent,
   PagerPageEvent,
+  PagerSizeEvent,
   ReorderEvent,
   RowOrGroup,
   ScrollEvent,
@@ -111,6 +112,16 @@ export class DatatableComponent<TRow = any>
    * If flagged, it shows the pager at the bottom of the datatable.
    */
   @Input() bottomPaging: boolean = true;
+
+  /**
+   * If flagged, it shows an input component to select the page size.
+   */
+  @Input() pageSizeSelector: boolean = false;
+
+  /**
+   * The options of page size that the selector shows.
+   */
+  @Input() pageSizeOptions: number[] = [5, 10, 20, 50, 100];
 
   /**
    * Template for the target marker of drag target columns.
@@ -1330,6 +1341,25 @@ export class DatatableComponent<TRow = any>
       this._internalRows = [...this._internalRows];
     } else {
       this._internalRows = sortRows(this._internalRows, this._internalColumns, this.sorts);
+    }
+  }
+
+  recalculatePageSize(size: PagerSizeEvent): void {
+    this.offset = 0;
+    this.bodyComponent.updateOffsetY(this.offset);
+
+    this.page.emit({
+      count: this.count,
+      pageSize: size.size,
+      limit: this.limit,
+      offset: this.offset
+    });
+
+    if (this.selectAllRowsOnPage) {
+      this.selected = [];
+      this.select.emit({
+        selected: this.selected
+      });
     }
   }
 }

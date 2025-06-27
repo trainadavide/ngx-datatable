@@ -18,6 +18,7 @@ import { Employee } from '../data.model';
         </small>
       </h3>
       <ngx-datatable
+        [pageSizeSelector]="true"
         [topPaging]="true"
         class="material"
         [rows]="rows"

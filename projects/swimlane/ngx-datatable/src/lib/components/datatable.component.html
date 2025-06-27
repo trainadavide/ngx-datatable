@@ -14,7 +14,10 @@
       [selectedCount]="selected.length"
       [selectedMessage]="!!selectionType && messages.selectedMessage"
       [pagerNextIcon]="cssClasses.pagerNext"
+      [pageSizeSelector]="pageSizeSelector"
+      [pageSizeOptions]="pageSizeOptions"
       (page)="onFooterPage($event)"
+      (size)="recalculatePageSize($event)"
     >
     </datatable-footer>
     } @if (headerHeight) {
@@ -113,6 +116,8 @@
     [selectedCount]="selected.length"
     [selectedMessage]="!!selectionType && messages.selectedMessage"
     [pagerNextIcon]="cssClasses.pagerNext"
+    [pageSizeSelector]="pageSizeSelector"
+    [pageSizeOptions]="pageSizeOptions"
     (page)="onFooterPage($event)"
   >
   </datatable-footer>

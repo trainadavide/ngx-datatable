@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { DatatableFooterDirective } from './footer.directive';
-import { PagerPageEvent } from '../../types/public.types';
+import { PagerPageEvent, PagerSizeEvent } from '../../types/public.types';
 import { DataTablePagerComponent } from './pager.component';
-import { NgClass, NgTemplateOutlet } from '@angular/common';
+import { NgClass, NgTemplateOutlet, CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'datatable-footer',
   template: `
@@ -23,7 +24,18 @@ import { NgClass, NgTemplateOutlet } from '@angular/common';
         }"
       >
       </ng-template>
-      } @else {
+      } @else { @if(pageSizeSelector) {
+      <select
+        [(ngModel)]="pageSize"
+        class="page-selector"
+        (change)="selectPageSize($event)"
+        name="pagesize"
+      >
+        <option *ngFor="let size of pageSizeOptions" [value]="size">
+          {{ size }}
+        </option>
+      </select>
+      }
       <div class="page-count">
         @if (selectedMessage) {
         <span> {{ selectedCount?.toLocaleString() }} {{ selectedMessage }} / </span>
@@ -49,7 +61,7 @@ import { NgClass, NgTemplateOutlet } from '@angular/common';
     class: 'datatable-footer'
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgClass, NgTemplateOutlet, DataTablePagerComponent]
+  imports: [NgClass, NgTemplateOutlet, DataTablePagerComponent, CommonModule, FormsModule]
 })
 export class DataTableFooterComponent {
   @Input() footerHeight: number;
@@ -63,10 +75,14 @@ export class DataTableFooterComponent {
   @Input() totalMessage: string;
   @Input() footerTemplate: DatatableFooterDirective;
 
+  @Input() pageSizeSelector: boolean;
+  @Input() pageSizeOptions: number[];
+
   @Input() selectedCount: number = 0;
   @Input() selectedMessage: string | boolean;
 
   @Output() page: EventEmitter<PagerPageEvent> = new EventEmitter();
+  @Output() size: EventEmitter<PagerSizeEvent> = new EventEmitter();
 
   get isVisible(): boolean {
     return this.rowCount / this.pageSize > 1;
@@ -74,5 +90,14 @@ export class DataTableFooterComponent {
 
   get curPage(): number {
     return this.offset + 1;
+  }
+
+  selectPageSize(event: any) {
+    const selectElement = event.target as HTMLSelectElement;
+    const selectedValue = parseInt(selectElement.value);
+    let pagerSizeEvent = {
+      size: selectedValue
+    };
+    this.size.emit(pagerSizeEvent);
   }
 }
