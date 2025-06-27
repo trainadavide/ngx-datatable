@@ -524,6 +524,11 @@ export class DatatableComponent<TRow = any>
   @Output() page: EventEmitter<PageEvent> = new EventEmitter();
 
   /**
+   * The table was paged either triggered by the pager or the body scroll.
+   */
+  @Output() onPageSizeChange: EventEmitter<PageEvent> = new EventEmitter();
+
+  /**
    * Columns were re-ordered.
    */
   @Output() reorder: EventEmitter<ReorderEvent> = new EventEmitter();
@@ -1349,6 +1354,16 @@ export class DatatableComponent<TRow = any>
     this.bodyComponent.updateOffsetY(this.offset);
 
     this.page.emit({
+      count: this.count,
+      pageSize: size.size,
+      limit: this.limit,
+      offset: this.offset
+    });
+
+    /**
+     * This event is need to use just for client side paging
+     */
+    this.onPageSizeChange.emit({
       count: this.count,
       pageSize: size.size,
       limit: this.limit,

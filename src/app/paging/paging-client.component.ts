@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ColumnMode } from 'projects/swimlane/ngx-datatable/src/public-api';
+import { ColumnMode, PageEvent } from 'projects/swimlane/ngx-datatable/src/public-api';
 import { Employee } from '../data.model';
 
 @Component({
@@ -27,7 +27,8 @@ import { Employee } from '../data.model';
         [headerHeight]="50"
         [footerHeight]="50"
         rowHeight="auto"
-        [limit]="10"
+        [limit]="limit"
+        (onPageSizeChange)="onPageSizeChange($event)"
       >
       </ngx-datatable>
     </div>
@@ -36,7 +37,7 @@ import { Employee } from '../data.model';
 })
 export class ClientPagingComponent {
   rows: Employee[] = [];
-
+  limit: number = 10;
   ColumnMode = ColumnMode;
 
   constructor() {
@@ -54,5 +55,9 @@ export class ClientPagingComponent {
     };
 
     req.send();
+  }
+
+  onPageSizeChange(pageInfo: PageEvent) {
+    this.limit = pageInfo.pageSize;
   }
 }
