@@ -61,7 +61,8 @@ import { FormsModule } from '@angular/forms';
     class: 'datatable-footer'
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgClass, NgTemplateOutlet, DataTablePagerComponent, CommonModule, FormsModule]
+  imports: [NgClass, NgTemplateOutlet, DataTablePagerComponent, CommonModule, FormsModule],
+  styleUrls: ['./footer.component.scss']
 })
 export class DataTableFooterComponent {
   @Input() footerHeight: number;

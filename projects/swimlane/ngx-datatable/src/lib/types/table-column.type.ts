@@ -189,6 +189,10 @@ export interface TableColumn<TRow = any> {
    * Summary cell template ref
    */
   summaryTemplate?: TemplateRef<any>;
+
+  hideBelow?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  hideAbove?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  responsiveHidden?: boolean; // Internal property to track current state
 }
 
 export interface TableColumnGroup {

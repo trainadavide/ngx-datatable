@@ -22,6 +22,7 @@ import {
   Output,
   QueryList,
   signal,
+  SimpleChanges,
   TemplateRef,
   ViewChild,
   ViewEncapsulation
@@ -29,7 +30,7 @@ import {
 
 import { DatatableGroupHeaderDirective } from './body/body-group-header.directive';
 
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription, takeUntil } from 'rxjs';
 import { INgxDatatableConfig } from '../ngx-datatable.module';
 import { groupRowsByParents, optionalGetterForProp } from '../utils/tree';
 import { TableColumn } from '../types/table-column.type';
@@ -69,6 +70,7 @@ import { AsyncPipe } from '@angular/common';
 import { DataTableFooterComponent } from './footer/footer.component';
 import { VisibilityDirective } from '../directives/visibility.directive';
 import { ProgressBarComponent } from './body/progress-bar.component';
+import { ResponsiveService } from '../services/responsive.service';
 
 @Component({
   selector: 'ngx-datatable',
@@ -102,6 +104,8 @@ export class DatatableComponent<TRow = any>
   private cd = inject(ChangeDetectorRef);
   private columnChangesService = inject(ColumnChangesService);
   private configuration = inject<INgxDatatableConfig>('configuration' as any, { optional: true });
+
+  private destroy$ = new Subject<void>();
 
   /**
    * If flagged, it shows the pager at the top of the datatable.
@@ -654,6 +658,15 @@ export class DatatableComponent<TRow = any>
     return this.selectionType === SelectionType.multiClick;
   }
 
+  get internalColumns() {
+    if (!this.columns) return [];
+
+    return this.columns.filter(column => !column.responsiveHidden);
+  }
+
+  // Method to get visible columns (use this in your template)
+  public visibleColumns: any[] = [];
+
   /**
    * Column templates gathered from `ContentChildren`
    * if described in your markup.
@@ -741,7 +754,7 @@ export class DatatableComponent<TRow = any>
   // this will be set to true once rows are available and rendered on UI
   private _rowInitDone = signal(false);
 
-  constructor() {
+  constructor(private responsiveService: ResponsiveService) {
     // apply global settings from Module.forRoot
     if (this.configuration) {
       if (this.configuration.messages) {
@@ -766,6 +779,20 @@ export class DatatableComponent<TRow = any>
     // if the table is hidden the visibility
     // listener will invoke this itself upon show
     this.recalculate();
+
+    this.responsiveService.breakpointState.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      console.log('Breakpoint changed, updating columns...');
+      this.updateResponsiveColumns();
+    });
+
+    // Initial responsive column update
+    //this.updateResponsiveColumns();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['columns'] && this.columns) {
+      this.updateResponsiveColumns();
+    }
   }
 
   /**
@@ -792,6 +819,9 @@ export class DatatableComponent<TRow = any>
         });
       }
     });
+
+    console.log('Initial responsive column update');
+    this.updateResponsiveColumns();
   }
 
   /**
@@ -1303,6 +1333,42 @@ export class DatatableComponent<TRow = any>
 
   ngOnDestroy() {
     this._subscriptions.forEach(subscription => subscription.unsubscribe());
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private updateResponsiveColumns(): void {
+    if (!this.columns) return;
+
+    console.log(
+      'Updating responsive columns, current breakpoint:',
+      this.responsiveService.currentBreakpoint
+    );
+
+    let hasChanges = false;
+
+    this.columns.forEach((column, index) => {
+      const col = column as any; // Type assertion for responsive properties
+      const shouldHide = this.responsiveService.shouldHideColumn(col.hideBelow, col.hideAbove);
+
+      console.log(
+        `Column ${index} (${col.name}): hideBelow=${col.hideBelow}, shouldHide=${shouldHide}`
+      );
+
+      if (col.responsiveHidden !== shouldHide) {
+        col.responsiveHidden = shouldHide;
+        hasChanges = true;
+      }
+    });
+
+    console.log('Has changes:', hasChanges);
+
+    if (hasChanges) {
+      this.visibleColumns = [...this.columns.filter(c => !c.responsiveHidden)];
+      // Trigger column update
+      this.recalculateColumns();
+      this.cd.detectChanges();
+    }
   }
 
   /**

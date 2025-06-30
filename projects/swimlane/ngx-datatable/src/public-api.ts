@@ -37,6 +37,7 @@ export * from './lib/directives/orderable.directive';
 export * from './lib/directives/resizeable.directive';
 export * from './lib/directives/visibility.directive';
 export * from './lib/directives/disable-row.directive';
+export * from './lib/directives/responsive-column.directive';
 
 // services
 export * from './lib/services/scrollbar-helper.service';

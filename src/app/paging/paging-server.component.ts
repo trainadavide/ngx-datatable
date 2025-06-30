@@ -25,8 +25,6 @@ import { Employee } from '../data.model';
         [topPaging]="true"
         class="material"
         [rows]="rows"
-        [columns]="[{ name: 'Name' }, { name: 'Gender' }, { name: 'Company' }]"
-        [columnMode]="ColumnMode.force"
         [headerHeight]="50"
         [footerHeight]="50"
         rowHeight="auto"
@@ -36,6 +34,33 @@ import { Employee } from '../data.model';
         [limit]="page.size"
         (page)="setPage($event)"
       >
+        <ngx-datatable-column [flexGrow]="3" [name]="'Name'" [resizeable]="false" prop="name">
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{ value }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column
+          [flexGrow]="3"
+          [name]="'Gender'"
+          [resizeable]="false"
+          *responsiveColumn="{ hideBelow: 'xl' }"
+          prop="gender"
+        >
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{ value }}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column
+          [flexGrow]="3"
+          [name]="'Company'"
+          [resizeable]="false"
+          *responsiveColumn="{ hideBelow: 'xl' }"
+          prop="company"
+        >
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            {{ value }}
+          </ng-template>
+        </ngx-datatable-column>
       </ngx-datatable>
     </div>
   `,

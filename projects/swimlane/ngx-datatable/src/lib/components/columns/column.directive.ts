@@ -6,6 +6,7 @@ import {
   Input,
   numberAttribute,
   OnChanges,
+  OnInit,
   PipeTransform,
   TemplateRef
 } from '@angular/core';
@@ -21,7 +22,7 @@ import { CellContext, HeaderCellContext } from '../../types/public.types';
   selector: 'ngx-datatable-column',
   standalone: true
 })
-export class DataTableColumnDirective<TRow> implements TableColumn, OnChanges {
+export class DataTableColumnDirective<TRow> implements TableColumn, OnChanges, OnInit {
   private columnChangesService = inject(ColumnChangesService);
   @Input() name: string;
   @Input() prop: TableColumnProp;
@@ -92,6 +93,22 @@ export class DataTableColumnDirective<TRow> implements TableColumn, OnChanges {
 
   @ContentChild(DataTableColumnGhostCellDirective, { read: TemplateRef, static: true })
   _ghostCellTemplateQuery: TemplateRef<void>;
+
+  /**
+   * Hide column when screen width is below this breakpoint
+   */
+  @Input() hideBelow?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+  /**
+   * Hide column when screen width is above this breakpoint
+   */
+  @Input() hideAbove?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /**
+   * Internal property to track if column is currently hidden due to responsive rules
+   */
+  responsiveHidden: boolean = false;
+
+  ngOnInit() {}
 
   get ghostCellTemplate(): TemplateRef<void> {
     return this._ghostCellTemplateInput || this._ghostCellTemplateQuery;
