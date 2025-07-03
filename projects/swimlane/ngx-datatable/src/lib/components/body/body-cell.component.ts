@@ -29,6 +29,7 @@ import {
 } from '../../types/public.types';
 import { DataTableGhostLoaderComponent } from './ghost-loader/ghost-loader.component';
 import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
+import { DataTableColumnDirective } from '../columns/column.directive';
 
 @Component({
   selector: 'datatable-body-cell',
@@ -72,7 +73,11 @@ import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
       <span [title]="sanitizedValue" [innerHTML]="value"> </span>
       } @else {
       <span [title]="sanitizedValue">{{ value }}</span>
-      } } @else {
+      } } @else { @if (hiddenColumns.length > 0 && colIndex === 0){
+      <a (click)="toggleHiddenDetails()">
+        <i class="datatable-icon-right"></i>
+      </a>
+      }
       <ng-template
         #cellTemplate
         [ngTemplateOutlet]="column.cellTemplate"
@@ -83,7 +88,20 @@ import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
     </div>
     } @else { @if (ghostLoadingIndicator) {
     <ghost-loader [columns]="[column]" [pageSize]="1"></ghost-loader>
-    } }
+    } } @if (hiddenColumns.length > 0 && colIndex === 0) {
+    <div class="datatable-hidden-columns-toggle">
+      @if (showHiddenDetails) {
+      <div class="datatable-hidden-columns">
+        @for (col of hiddenColumns; track col.prop) {
+        <div class="datatable-hidden-column">
+          <b>{{ col.name }}:</b>
+          {{ column.$$valueGetter(row, col.prop) }}
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
   `,
   imports: [NgTemplateOutlet, DataTableGhostLoaderComponent, AsyncPipe]
 })
@@ -91,8 +109,13 @@ export class DataTableBodyCellComponent<TRow extends { level?: number } = any>
   implements DoCheck, OnDestroy
 {
   private cd = inject(ChangeDetectorRef);
+  showHiddenDetails = false;
 
   @Input() displayCheck: (row: RowOrGroup<TRow>, column: TableColumn, value: any) => boolean;
+
+  @Input() hiddenColumns: DataTableColumnDirective<TRow>[] = [];
+
+  @Input() colIndex: number;
 
   _disable$: BehaviorSubject<boolean>;
   @Input() set disable$(val: BehaviorSubject<boolean>) {
@@ -469,5 +492,9 @@ export class DataTableBodyCellComponent<TRow extends { level?: number } = any>
   calcLeftMargin(column: TableColumn, row: RowOrGroup<TRow>): number {
     const levelIndent = column.treeLevelIndent != null ? column.treeLevelIndent : 50;
     return column.isTreeColumn ? (row as TRow).level * levelIndent : 0;
+  }
+
+  toggleHiddenDetails() {
+    this.showHiddenDetails = !this.showHiddenDetails;
   }
 }

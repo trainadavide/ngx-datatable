@@ -43,7 +43,7 @@ import { Employee } from '../data.model';
           [flexGrow]="3"
           [name]="'Gender'"
           [resizeable]="false"
-          *responsiveColumn="{ hideBelow: 'xl' }"
+          *responsiveColumn="{ hideBelow: 'lg' }"
           prop="gender"
         >
           <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>

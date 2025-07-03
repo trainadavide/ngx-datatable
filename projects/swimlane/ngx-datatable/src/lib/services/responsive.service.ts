@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Subject, fromEvent, BehaviorSubject } from 'rxjs';
+import { Subject, fromEvent, BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 export type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -19,6 +19,22 @@ export interface BreakpointState {
 export class ResponsiveService implements OnDestroy {
   private destroy$ = new Subject<void>();
 
+  private _startHide = false;
+  private startHideSubject = new BehaviorSubject<boolean>(false);
+
+  get startHide(): boolean {
+    return this._startHide;
+  }
+
+  set startHide(value: boolean) {
+    this._startHide = value;
+    this.startHideSubject.next(value);
+  }
+
+  get startHide$(): Observable<boolean> {
+    return this.startHideSubject.asObservable();
+  }
+
   // Define breakpoints (you can customize these values)
   private readonly breakpoints = {
     xs: 0,
@@ -31,8 +47,6 @@ export class ResponsiveService implements OnDestroy {
   private breakpointState$ = new BehaviorSubject<BreakpointState>(this.getBreakpointState());
 
   constructor() {
-    console.log('ResponsiveService initialized');
-
     // Listen to window resize events
     fromEvent(window, 'resize')
       .pipe(debounceTime(150), takeUntil(this.destroy$))
@@ -42,7 +56,6 @@ export class ResponsiveService implements OnDestroy {
 
         // Only update if breakpoint has changed
         if (newState.current !== prevState.current) {
-          console.log('Breakpoint changed from', prevState.current, 'to', newState.current);
           this.breakpointState$.next(newState);
         }
       });

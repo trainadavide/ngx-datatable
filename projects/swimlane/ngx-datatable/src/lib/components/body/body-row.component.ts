@@ -24,6 +24,7 @@ import { AsyncPipe } from '@angular/common';
 import { TableColumn } from '../../types/table-column.type';
 import { ColumnGroupWidth, PinnedColumns } from '../../types/internal.types';
 import { DataTableBodyCellComponent } from './body-cell.component';
+import { DataTableColumnDirective } from '../columns/column.directive';
 
 @Component({
   selector: 'datatable-body-row',
@@ -45,6 +46,8 @@ import { DataTableBodyCellComponent } from './body-cell.component';
         [isSelected]="isSelected"
         [rowIndex]="rowIndex"
         [column]="column"
+        [hiddenColumns]="hiddenColumns"
+        [colIndex]="ii"
         [rowHeight]="rowHeight"
         [displayCheck]="displayCheck"
         [disable$]="disable$"
@@ -71,6 +74,8 @@ export class DataTableBodyRowComponent<TRow = any> implements DoCheck, OnChanges
   get columns(): TableColumn[] {
     return this._columns;
   }
+
+  @Input() hiddenColumns: DataTableColumnDirective<TRow>[] = [];
 
   @Input() set innerWidth(val: number) {
     if (this._columns) {

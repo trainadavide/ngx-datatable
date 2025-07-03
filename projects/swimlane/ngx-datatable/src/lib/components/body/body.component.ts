@@ -39,6 +39,7 @@ import { DataTableRowWrapperComponent } from './body-row-wrapper.component';
 import { DataTableSummaryRowComponent } from './summary/summary-row.component';
 import { DataTableSelectionComponent } from './selection.component';
 import { DataTableGhostLoaderComponent } from './ghost-loader/ghost-loader.component';
+import { DataTableColumnDirective } from '../columns/column.directive';
 
 @Component({
   selector: 'datatable-body',
@@ -131,6 +132,7 @@ import { DataTableGhostLoaderComponent } from './ghost-loader/ghost-loader.compo
                     [innerWidth]="innerWidth"
                     [offsetX]="offsetX"
                     [columns]="columns"
+                    [hiddenColumns]="hiddenColumns"
                     [rowHeight]="getRowHeight(group)"
                     [row]="group"
                     [rowIndex]="getRowIndex(group)"
@@ -165,6 +167,7 @@ import { DataTableGhostLoaderComponent } from './ghost-loader/ghost-loader.compo
                     [innerWidth]="innerWidth"
                     [offsetX]="offsetX"
                     [columns]="columns"
+                    [hiddenColumns]="hiddenColumns"
                     [rowHeight]="getRowHeight(group)"
                     [row]="group"
                     [rowIndex]="getRowIndex(group)"
@@ -200,6 +203,7 @@ import { DataTableGhostLoaderComponent } from './ghost-loader/ghost-loader.compo
                     [innerWidth]="innerWidth"
                     [offsetX]="offsetX"
                     [columns]="columns"
+                    [hiddenColumns]="hiddenColumns"
                     [rowHeight]="getRowHeight(row)"
                     [row]="row"
                     [group]="group.value"
@@ -336,6 +340,8 @@ export class DataTableBodyComponent<TRow extends { treeStatus?: TreeStatus } = a
   get columns(): any[] {
     return this._columns;
   }
+
+  @Input() hiddenColumns: DataTableColumnDirective<TRow>[] = [];
 
   @Input() set offset(val: number) {
     if (val !== this._offset) {
